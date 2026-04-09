@@ -764,21 +764,40 @@ function submitContact(e) {
   e.preventDefault();
   var name = document.getElementById('cf-name').value;
   var email = document.getElementById('cf-email').value;
-  var subject = document.getElementById('cf-subject').value;
+  var subjectText = document.getElementById('cf-subject').options[document.getElementById('cf-subject').selectedIndex].text;
   var msg = document.getElementById('cf-msg').value;
 
-  /* Send via WhatsApp */
-  var subjectText = document.getElementById('cf-subject').options[document.getElementById('cf-subject').selectedIndex].text;
-  var waMsg = '*Nuevo mensaje desde innova506.org*\n\n'
-    + '*Nombre:* ' + name + '\n'
-    + '*Correo:* ' + email + '\n'
-    + '*Asunto:* ' + subjectText + '\n\n'
-    + '*Mensaje:*\n' + msg;
-  window.open('https://wa.me/50688575092?text=' + encodeURIComponent(waMsg), '_blank');
+  var btn = document.querySelector('.btn-submit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enviando...';
 
-  /* Show success */
-  document.querySelector('#contact-form form').style.display = 'none';
-  document.getElementById('form-success').style.display = 'block';
+  fetch('https://formsubmit.co/ajax/innova506@hotmail.com', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      message: msg,
+      _subject: 'Nuevo mensaje desde innova506.org - ' + subjectText,
+      _template: 'table'
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.success) {
+      document.querySelector('#contact-form form').style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } else {
+      alert('Error al enviar. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Enviar mensaje';
+    }
+  })
+  .catch(function() {
+    alert('Error de conexión. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-paper-plane"></i> Enviar mensaje';
+  });
   return false;
 }
 
