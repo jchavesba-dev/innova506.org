@@ -1,0 +1,3496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus INNOVA 506</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --primary: #E04E2E;
+  --primary-dark: #c03c1e;
+  --dark: #3A3A3A;
+  --sidebar: #2C2C2C;
+  --white: #fff;
+  --light: #f5f5f5;
+  --border: #e0e0e0;
+  --success: #27ae60;
+  --info: #2980b9;
+  --muted: #888;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--light); color:var(--dark); }
+
+/* ===== LOGIN ===== */
+#app-login {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#2C2C2C 0%,#3A3A3A 60%,#E04E2E 100%);
+}
+.login-card {
+  background:white; border-radius:18px; padding:48px 40px;
+  width:100%; max-width:420px; box-shadow:0 24px 60px rgba(0,0,0,0.35); text-align:center;
+}
+.login-logo { margin-bottom:16px; }
+.login-logo svg { width:64px; height:64px; }
+.login-brand { font-size:22px; font-weight:800; color:var(--dark); letter-spacing:-0.5px; }
+.login-brand span { color:var(--primary); }
+.login-sub { font-size:12px; color:var(--muted); margin-bottom:28px; margin-top:3px; }
+.login-tabs { display:flex; border:1.5px solid var(--border); border-radius:9px; overflow:hidden; margin-bottom:22px; }
+.login-tab { flex:1; padding:9px; font-size:13px; background:none; border:none; cursor:pointer; color:var(--muted); font-weight:500; }
+.login-tab.active { background:var(--primary); color:white; font-weight:700; }
+.fg { text-align:left; margin-bottom:15px; }
+.fg label { font-size:12px; font-weight:700; color:var(--dark); display:block; margin-bottom:5px; }
+.fg input { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; outline:none; transition:.2s; }
+.fg input:focus { border-color:var(--primary); }
+.btn-login { width:100%; padding:13px; background:var(--primary); color:white; border:none; border-radius:9px; font-size:15px; font-weight:700; cursor:pointer; transition:.2s; }
+.btn-login:hover { background:var(--primary-dark); }
+.login-err { color:#e74c3c; font-size:13px; margin-top:10px; display:none; }
+.login-hint { font-size:11px; color:var(--muted); margin-top:14px; }
+
+/* ===== MAIN ===== */
+#app-main { display:none; min-height:100vh; }
+#app-main.active { display:flex; }
+
+/* SIDEBAR */
+.sidebar { width:180px; background:var(--sidebar); color:white; display:flex; flex-direction:column; min-height:100vh; flex-shrink:0; }
+.sb-brand { padding:20px 16px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:10px; }
+.sb-brand svg { width:34px; height:34px; flex-shrink:0; }
+.sb-brand-text { font-size:12px; font-weight:700; line-height:1.3; }
+.sb-brand-text span { color:var(--primary); font-size:15px; display:block; }
+.sb-user { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.sb-user small { font-size:11px; color:rgba(255,255,255,0.45); }
+.sb-user strong { display:block; font-size:14px; margin-top:2px; }
+.sb-nav { flex:1; padding:10px 0; }
+.nav-sec { padding:10px 16px 4px; font-size:10px; font-weight:700; color:rgba(255,255,255,0.35); letter-spacing:.8px; text-transform:uppercase; }
+.nav-it { display:flex; align-items:center; gap:10px; padding:10px 16px; font-size:14px; color:rgba(255,255,255,0.65); cursor:pointer; transition:.15s; border-left:3px solid transparent; }
+.nav-it:hover { background:rgba(255,255,255,0.05); color:white; }
+.nav-it.active { background:rgba(224,78,46,0.18); color:white; border-left-color:var(--primary); }
+.nav-it i { width:16px; text-align:center; }
+.sb-footer { padding:12px 16px; border-top:1px solid rgba(255,255,255,0.08); }
+.btn-logout { width:100%; padding:8px; background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:7px; cursor:pointer; font-size:13px; }
+.btn-logout:hover { background:rgba(255,255,255,0.1); color:white; }
+
+/* CONTENT */
+.content { flex:1; overflow-y:auto; }
+.view { display:none; padding:16px; }
+.view.active { display:block; }
+.ph { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.ph-left .ph-title { font-size:22px; font-weight:700; }
+.ph-left .ph-sub { font-size:13px; color:var(--muted); margin-top:3px; }
+
+/* STATS */
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:24px; }
+.stat { background:white; border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+.stat-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; margin-bottom:12px; }
+.stat-val { font-size:30px; font-weight:800; }
+.stat-lbl { font-size:12px; color:var(--muted); margin-top:2px; }
+
+/* CARD */
+.card { background:white; border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); margin-bottom:20px; }
+.card-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-title { font-size:16px; font-weight:600; }
+
+/* BUTTONS */
+.btn { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:.15s; display:inline-flex; align-items:center; gap:6px; }
+.btn-sm { padding:5px 11px; font-size:12px; }
+.btn-primary { background:var(--primary); color:white; }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-dark { background:var(--dark); color:white; }
+.btn-outline { background:none; border:1.5px solid var(--border); color:var(--dark); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+.btn-danger { background:#e74c3c; color:white; }
+.btn-success { background:var(--success); color:white; }
+.btn-warning { background:#f39c12; color:white; }
+.btn-warning:hover { background:#d68910; }
+
+/* TABLE */
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th { text-align:left; padding:10px 12px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid var(--border); }
+td { padding:12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+.badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.b-orange { background:#fde8e3; color:var(--primary); }
+.b-green { background:#d4edda; color:#155724; }
+.b-gray { background:#f0f0f0; color:#666; }
+.b-blue { background:#d0e8f5; color:#155169; }
+.b-red { background:#fde8e8; color:#721c24; }
+
+/* FORMS */
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.ff { margin-bottom:14px; }
+.ff label { display:block; font-size:12px; font-weight:700; margin-bottom:5px; }
+.ff input, .ff select, .ff textarea { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; outline:none; font-family:inherit; transition:.2s; }
+.ff input:focus, .ff select:focus, .ff textarea:focus { border-color:var(--primary); }
+.ff textarea { min-height:80px; resize:vertical; }
+
+/* COURSE CARDS */
+.cgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.cc { background:white; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:.2s; }
+.cc:hover { box-shadow:0 4px 24px rgba(0,0,0,0.13); transform:translateY(-2px); }
+.cc-head { height:96px; display:flex; align-items:center; justify-content:center; font-size:40px; }
+.cc-body { padding:16px; }
+.cc-title { font-size:15px; font-weight:700; margin-bottom:4px; }
+.cc-desc { font-size:13px; color:var(--muted); margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.cc-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+
+/* PROGRESS */
+.pbar { background:var(--border); border-radius:99px; height:7px; overflow:hidden; }
+.pfill { height:100%; background:var(--primary); border-radius:99px; transition:.4s; }
+
+/* MATERIALS */
+.mat-item { display:flex; align-items:center; gap:12px; padding:13px; border:1.5px solid var(--border); border-radius:9px; margin-bottom:8px; }
+.content-item { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid var(--border); border-radius:9px; margin-bottom:8px; background:white; transition:box-shadow .15s; }
+.content-item:hover { box-shadow:0 2px 8px rgba(0,0,0,.07); }
+.content-item-body { flex:1; min-width:0; overflow:hidden; }
+.content-item-actions { display:flex; gap:5px; align-items:center; flex-shrink:0; }
+.content-item-arrows { display:flex; flex-direction:column; gap:3px; flex-shrink:0; }
+.move-btn { background:none; border:1.5px solid var(--border); border-radius:6px; width:26px; height:26px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; transition:all .15s; padding:0; }
+.move-btn:hover:not(:disabled) { background:var(--primary); color:white; border-color:var(--primary); }
+.move-btn:disabled { opacity:.3; cursor:default; }
+.mat-icon { width:38px; height:38px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.mat-info { flex:1; }
+.mat-title { font-size:14px; font-weight:600; }
+.mat-type { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* TABS */
+.tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:20px; gap:4px; }
+.tab { padding:10px 16px; font-size:14px; font-weight:500; cursor:pointer; color:var(--muted); border-bottom:2.5px solid transparent; margin-bottom:-2px; transition:.15s; }
+.tab:hover { color:var(--dark); }
+.tab.active { color:var(--primary); border-bottom-color:var(--primary); font-weight:700; }
+
+/* QUIZ */
+.qcard { background:white; border-radius:var(--radius); padding:20px; margin-bottom:14px; box-shadow:var(--shadow); }
+.qnum { font-size:12px; font-weight:700; color:var(--primary); margin-bottom:6px; }
+.qtext { font-size:15px; font-weight:500; margin-bottom:14px; line-height:1.5; }
+.opt { display:flex; align-items:center; gap:10px; padding:11px 14px; border:1.5px solid var(--border); border-radius:9px; margin-bottom:8px; cursor:pointer; transition:.15s; font-size:14px; }
+.opt:hover { border-color:var(--primary); background:#fdf4f2; }
+.opt input[type=radio] { accent-color:var(--primary); flex-shrink:0; }
+.opt.correct { border-color:var(--success); background:#d4edda; }
+.opt.wrong { border-color:#e74c3c; background:#fde8e8; }
+
+/* VIDEO */
+.video-wrap { position:relative; padding-bottom:56.25%; height:0; border-radius:10px; overflow:hidden; margin-bottom:16px; }
+.video-wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+
+/* MODAL */
+.mbk { position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1000; display:none; align-items:center; justify-content:center; padding:16px; }
+.mbk.active { display:flex; }
+.modal { background:white; border-radius:16px; padding:28px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; }
+.modal-lg { max-width:700px; }
+.mhd { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.mhd-title { font-size:18px; font-weight:700; }
+.mclose { background:none; border:none; font-size:24px; cursor:pointer; color:var(--muted); line-height:1; }
+.mft { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }
+
+/* TOAST */
+.toast { position:fixed; bottom:24px; right:24px; padding:12px 20px; border-radius:9px; font-size:14px; z-index:9999; display:none; box-shadow:0 4px 20px rgba(0,0,0,0.25); color:white; font-weight:500; }
+.toast.show { display:block; animation:tin .3s ease; }
+@keyframes tin { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* EMPTY */
+.empty { text-align:center; padding:52px 20px; color:var(--muted); }
+.empty i { font-size:52px; margin-bottom:14px; opacity:.25; display:block; }
+.empty p { font-size:15px; }
+
+/* RESULT CARD */
+.result-card { text-align:center; padding:40px 32px; max-width:520px; margin:0 auto; }
+.result-emoji { font-size:64px; margin-bottom:16px; }
+.result-label { font-size:22px; font-weight:700; margin-bottom:8px; }
+.result-pct { font-size:52px; font-weight:800; margin:16px 0; }
+.result-review { text-align:left; margin-top:20px; }
+.ritem { padding:10px 14px; border-radius:9px; margin-bottom:8px; font-size:13px; }
+.ritem.ok { background:#d4edda; color:#155724; }
+.ritem.nok { background:#fde8e8; color:#721c24; }
+.ritem-correct { font-size:12px; margin-top:4px; opacity:.8; }
+
+/* PROGRESS COLORS */
+.pfill-red    { background:#e74c3c; }
+.pfill-orange { background:#f39c12; }
+.pfill-green  { background:var(--success); }
+
+/* PROGRESS DETAIL BAR */
+.prog-detail { background:white; border-radius:var(--radius); padding:16px 20px; box-shadow:var(--shadow); margin-bottom:20px; }
+.prog-detail-bar { margin:10px 0 8px; }
+.prog-breakdown { font-size:13px; color:var(--muted); display:flex; gap:16px; flex-wrap:wrap; }
+
+/* TYPE BADGE */
+.b-purple { background:#e8d0f5; color:#6f42c1; }
+
+/* QUIZ TIMER */
+.quiz-timer {
+  position:fixed; top:80px; right:24px; z-index:500;
+  padding:10px 18px; border-radius:12px; font-size:22px; font-weight:800;
+  display:flex; align-items:center; gap:8px;
+  box-shadow:0 4px 18px rgba(0,0,0,0.18); background:white; border:2px solid var(--border);
+  letter-spacing:1px; user-select:none; transition:color .3s, border-color .3s;
+}
+.quiz-timer.timer-green  { color:#27ae60; border-color:#27ae60; }
+.quiz-timer.timer-orange { color:#f39c12; border-color:#f39c12; animation:timerPulse 1.5s ease-in-out infinite; }
+.quiz-timer.timer-red    { color:#e74c3c; border-color:#e74c3c; animation:timerPulse .7s ease-in-out infinite; }
+@keyframes timerPulse {
+  0%,100% { transform:scale(1); box-shadow:0 4px 18px rgba(0,0,0,0.18); }
+  50%     { transform:scale(1.06); box-shadow:0 6px 24px rgba(0,0,0,0.28); }
+}
+
+/* ATTEMPT BADGE */
+.attempt-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 14px; border-radius:20px; font-size:13px; font-weight:700;
+  background:#d0e8f5; color:#155169; margin-left:10px;
+}
+
+.hamburger { position:fixed; top:12px; left:12px; z-index:900; width:40px; height:40px; background:var(--sidebar); color:white; border:none; border-radius:9px; align-items:center; justify-content:center; cursor:pointer; font-size:18px; box-shadow:0 2px 8px rgba(0,0,0,0.3); display:none; }
+.mobile-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:799; display:none; }
+.mobile-overlay.active { display:block; }
+@media(max-width:768px) {
+  .sidebar { position:fixed; left:-184px; top:0; height:100vh; z-index:800; transition:left .25s ease; box-shadow:none; }
+  .sidebar.open { left:0; box-shadow:4px 0 24px rgba(0,0,0,0.35); }
+  .hamburger { display:flex; }
+  .content { padding-top:0; }
+  .frow { grid-template-columns:1fr; }
+  .view { padding:16px; padding-top:60px; }
+  .view.active:first-of-type { padding-top:60px; }
+}
+
+/* ===== BANNERS DE SECCIÓN ===== */
+.section-banner { border-radius:12px; padding:20px 24px; margin-bottom:16px; position:relative; overflow:hidden; }
+.section-banner::before { content:''; position:absolute; top:0;left:0;right:0;bottom:0; background:rgba(255,255,255,0.07); }
+.section-banner-title { font-size:19px; font-weight:800; color:white; letter-spacing:-.3px; text-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.section-banner-sub { font-size:13px; color:rgba(255,255,255,0.82); margin-top:4px; }
+.section-banner-admin { border-radius:10px; padding:14px 18px; margin-bottom:12px; border-left:5px solid; display:flex; align-items:center; gap:12px; }
+.section-banner-admin-icon { font-size:22px; }
+.section-banner-admin-info { flex:1; }
+.section-banner-admin-title { font-size:14px; font-weight:700; }
+.section-banner-admin-sub { font-size:12px; color:var(--muted); margin-top:2px; }
+
+/* BLOQUEO DE ACTIVIDAD */
+.locked-card { border-left:4px solid #e74c3c; background:#fff8f8; border-radius:var(--radius); padding:16px 20px; margin-bottom:12px; }
+.locked-card-header { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.locked-card-title { font-size:15px; font-weight:700; }
+.locked-reason { font-size:13px; color:#721c24; display:flex; align-items:center; gap:6px; margin-top:4px; }
+.sec-color-btn { width:28px; height:28px; border-radius:50%; border:3px solid transparent; cursor:pointer; transition:.15s; flex-shrink:0; }
+.sec-color-btn.selected { border-color:white; box-shadow:0 0 0 2.5px #333; transform:scale(1.15); }
+
+/* ===== STUDENT COURSE SPLIT PANEL (Q10-style) ===== */
+.sc-layout { display:flex; gap:0; min-height:calc(100vh - 160px); border-radius:var(--radius); overflow:hidden; border:1.5px solid var(--border); background:#fff; }
+.sc-nav-panel { width:220px; min-width:220px; border-right:1.5px solid var(--border); overflow-y:auto; background:#fafafa; flex-shrink:0; }
+.sc-content-area { flex:1; overflow-y:auto; padding:24px; min-width:0; }
+.sc-nav-item { display:flex; align-items:center; gap:9px; padding:10px 14px; cursor:pointer; font-size:14.5px; border-left:3px solid transparent; transition:background .12s, border-color .12s; color:#333; line-height:1.35; }
+.sc-nav-item:hover { background:#f0f0f0; }
+.sc-nav-item.active { background:#fff3f0; border-left-color:var(--primary); color:var(--primary); font-weight:600; }
+.sc-nav-sep { padding:10px 14px 3px; font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:.6px; background:#fafafa; border-top:1px solid var(--border); margin-top:4px; }
+.sc-nav-sep:first-child { border-top:none; margin-top:0; }
+.sc-nav-sec-hdr { padding:6px 14px; font-size:13px; font-weight:700; letter-spacing:.3px; }
+@media(max-width:768px) {
+  .sc-layout { flex-direction:column; min-height:auto; }
+  .sc-nav-panel { width:100%; min-width:0; border-right:none; border-bottom:1.5px solid var(--border); max-height:220px; }
+  .sc-content-area { padding:16px; }
+}
+
+/* ===== EMOJI PICKER ===== */
+.emoji-picker-wrap { position:relative; }
+.emoji-trigger { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:20px; cursor:pointer; background:white; display:flex; align-items:center; gap:8px; transition:.15s; }
+.emoji-trigger:hover { border-color:var(--primary); }
+.emoji-trigger span.et-label { font-size:13px; color:var(--muted); }
+.emoji-panel { display:none; position:absolute; z-index:2000; background:white; border:1.5px solid var(--border); border-radius:12px; padding:14px; box-shadow:0 8px 32px rgba(0,0,0,0.15); width:300px; left:0; top:calc(100% + 4px); }
+.emoji-panel.open { display:block; }
+.emoji-cat-label { font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:8px 0 4px; }
+.emoji-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:3px; }
+.emoji-grid span { font-size:20px; cursor:pointer; padding:5px; border-radius:7px; text-align:center; transition:.1s; display:block; }
+.emoji-grid span:hover { background:var(--light); transform:scale(1.25); }
+
+/* ===== QUIZ IMPORT ===== */
+.import-box { border:2px dashed var(--border); border-radius:10px; padding:16px; background:var(--light); margin-bottom:14px; }
+.import-box-title { font-size:13px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.import-preview { max-height:180px; overflow-y:auto; margin-top:10px; }
+.import-preview-row { padding:6px 10px; border-radius:6px; font-size:12px; margin-bottom:4px; }
+.import-preview-row.ok  { background:#d4edda; color:#155724; }
+.import-preview-row.err { background:#fde8e3; color:#721c24; }
+
+/* ===== CUADERNO DE CALIFICACIONES ===== */
+.gb-wrap { overflow-x:auto; border-radius:var(--radius); box-shadow:var(--shadow); }
+.gb-table { border-collapse:collapse; width:100%; min-width:600px; background:white; font-size:13px; }
+.gb-table th { background:#2C2C2C; color:white; padding:10px 12px; text-align:center; font-weight:600; font-size:12px; white-space:nowrap; border:1px solid #444; }
+.gb-table th.gb-name { text-align:left; min-width:150px; background:#2C2C2C; }
+.gb-table th.gb-cat-quiz { background:#1a5276; }
+.gb-table th.gb-cat-assign { background:#145a32; }
+.gb-table th.gb-total { background:#4a235a; }
+.gb-table td { padding:8px 12px; border:1px solid #e8e8e8; text-align:center; }
+.gb-table td.gb-student { text-align:left; font-weight:600; background:#fafafa; white-space:nowrap; }
+.gb-table tr:hover td { background:#f0f4f8; }
+.gb-table tr:hover td.gb-student { background:#e8edf3; }
+.gb-table tr.gb-avg-row td { background:#fef9e7; font-weight:700; border-top:2px solid #f39c12; }
+.gb-table tr.gb-avg-row td.gb-student { background:#fef3cd; }
+.gb-cell-pass { background:#d4edda !important; color:#155724; font-weight:600; }
+.gb-cell-fail { background:#fde8e3 !important; color:#7b1c0a; font-weight:600; }
+.gb-cell-empty { color:#bbb; font-style:italic; font-size:11px; }
+.gb-cell-final { font-size:14px; font-weight:800; }
+.gb-letter { display:inline-block; padding:2px 8px; border-radius:6px; font-weight:800; font-size:13px; background:#e8d0f5; color:#6f42c1; }
+
+/* Config de calificaciones */
+.cfg-section { background:white; border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); margin-bottom:20px; }
+.cfg-section-title { font-size:15px; font-weight:700; color:var(--dark); margin-bottom:16px; padding-bottom:10px; border-bottom:2px solid var(--border); display:flex; align-items:center; gap:8px; }
+.cfg-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+.cfg-item { display:flex; flex-direction:column; gap:6px; }
+.cfg-item label { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.cfg-item input, .cfg-item select { padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; }
+.cfg-item input:focus, .cfg-item select:focus { outline:none; border-color:var(--primary); }
+.letter-row { display:grid; grid-template-columns:80px 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+.letter-row label { font-size:13px; font-weight:700; color:var(--dark); }
+.letter-row input { padding:7px 10px; border:1.5px solid var(--border); border-radius:7px; font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="app-login">
+  <div class="login-card">
+    <div class="login-brand"><span>INNOVA 506</span> Campus</div>
+    <div class="login-sub">Innovasoluciones Empresariales S.R.L &mdash; Plataforma Virtual</div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="setLoginMode('creds')">Usuario / Contraseña</button>
+      <button class="login-tab" onclick="setLoginMode('code')">Código de acceso</button>
+    </div>
+
+    <div id="lm-creds">
+      <div class="fg"><label>Usuario</label><input type="text" id="l-user" placeholder="tu_usuario" autocomplete="username"></div>
+      <div class="fg"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+    </div>
+    <div id="lm-code" style="display:none">
+      <div class="fg"><label>Código de Acceso</label><input type="text" id="l-code" placeholder="INNOVA-XXXXXX" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginCode()"></div>
+    </div>
+
+    <button class="btn-login" onclick="loginMode==='creds'?login():loginCode()">Ingresar</button>
+    <div class="login-err" id="l-err">Credenciales incorrectas. Intenta nuevamente.</div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app-main">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><i class="fa fa-bars"></i></button>
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeSidebar()"></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-text"><span>INNOVA 506</span>Campus Virtual</div>
+    </div>
+    <div class="sb-user">
+      <small>Bienvenido,</small>
+      <strong id="sb-name">-</strong>
+    </div>
+    <nav class="sb-nav" id="sb-nav"></nav>
+    <div class="sb-footer">
+      <button class="btn-logout" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ADMIN: DASHBOARD -->
+    <div class="view" id="v-adash">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Panel de Administración</div><div class="ph-sub">Bienvenido al Campus INNOVA 506</div></div>
+      </div>
+      <div class="stats" id="adash-stats"></div>
+      <div class="card">
+        <div class="card-hd"><span class="card-title">Inscripciones recientes</span></div>
+        <div id="adash-enroll"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN: CURSOS -->
+    <div class="view" id="v-acourses">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Gestión de Cursos</div><div class="ph-sub">Crea y administra los cursos del campus</div></div>
+        <button class="btn btn-primary" onclick="openCourseModal()"><i class="fa fa-plus"></i> Nuevo Curso</button>
+      </div>
+      <div class="cgrid" id="acourses-grid"></div>
+    </div>
+
+    <!-- ADMIN: EDITOR DE CURSO -->
+    <div class="view" id="v-editor">
+      <div class="ph">
+        <div class="ph-left" style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline btn-sm" onclick="editorBack()"><i class="fa fa-arrow-left"></i></button>
+          <div><div class="ph-title" id="editor-title">Curso</div><div class="ph-sub">Contenido · Calificaciones · Estudiantes</div></div>
+        </div>
+      </div>
+      <div class="tabs" id="editor-tabs">
+        <div class="tab active" onclick="editorTab('content',this)">Contenido</div>
+        <div class="tab" onclick="editorTab('grades',this)">Calificaciones</div>
+        <div class="tab" onclick="editorTab('enroll',this)">Estudiantes</div>
+      </div>
+      <div id="editor-body"></div>
+    </div>
+
+    <!-- ADMIN: USUARIOS (Estudiantes + Docentes) -->
+    <div class="view" id="v-astudents">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Usuarios</div><div class="ph-sub">Estudiantes y Docentes</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="openStudentModal('student')"><i class="fa fa-user-plus"></i> Agregar Estudiante</button>
+          <button class="btn btn-primary" style="background:#5b6abf" onclick="openStudentModal('teacher')"><i class="fa fa-chalkboard-teacher"></i> Agregar Docente</button>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;max-width:420px">
+        <input type="text" id="student-search" placeholder="🔍 Buscar por nombre o usuario..."
+          style="width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:.2s"
+          oninput="filterStudents(this.value)"
+          onfocus="this.style.borderColor='var(--primary)'"
+          onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Nombre</th><th>Rol</th><th>Usuario</th><th>Código de acceso</th><th>Cursos</th><th></th></tr></thead>
+          <tbody id="students-tb"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: CALIFICACIONES -->
+    <div class="view" id="v-agrades">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Calificaciones</div><div class="ph-sub">Cuestionarios y tareas por estudiante</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="exportGradesCSV()"><i class="fa fa-file-excel"></i> Exportar Excel</button>
+          <button class="btn btn-dark" onclick="exportGeneralPDF()"><i class="fa fa-file-pdf"></i> Reporte General PDF</button>
+        </div>
+      </div>
+      <div class="tabs" id="agrades-tabs">
+        <div class="tab active" onclick="agradesTab('quizzes',this)">Cuestionarios</div>
+        <div class="tab" onclick="agradesTab('assignments',this)">Tareas</div>
+      </div>
+      <div id="agrades-body">
+        <div class="card">
+          <table>
+            <thead><tr><th>Estudiante</th><th>Curso</th><th>Cuestionario</th><th>Nota</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+            <tbody id="agrades-tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENT: DASHBOARD -->
+    <div class="view" id="v-sdash">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title" id="s-welcome">Mis Cursos</div><div class="ph-sub">Campus Virtual INNOVA 506</div></div>
+      </div>
+      <div class="cgrid" id="sdash-grid"></div>
+    </div>
+
+    <!-- STUDENT: CURSO DETALLE -->
+    <div class="view" id="v-scourse">
+      <div class="ph">
+        <div class="ph-left" style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline btn-sm" onclick="showView('v-sdash');renderStudentDash()"><i class="fa fa-arrow-left"></i></button>
+          <div><div class="ph-title" id="sc-title">Curso</div><div class="ph-sub" id="sc-sub"></div></div>
+        </div>
+      </div>
+      <div class="sc-layout" id="sc-layout">
+        <div class="sc-nav-panel" id="sc-nav"></div>
+        <div class="sc-content-area" id="sc-body"></div>
+      </div>
+    </div>
+
+    <!-- TEACHER: MIS CURSOS -->
+    <div class="view" id="v-tcourses">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Mis Cursos</div><div class="ph-sub">Cursos asignados para gestionar</div></div>
+      </div>
+      <div class="cgrid" id="tcourses-grid"></div>
+    </div>
+
+    <!-- STUDENT: QUIZ -->
+    <div class="view" id="v-squiz">
+      <div class="ph">
+        <div class="ph-left" style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline btn-sm" id="quiz-back"><i class="fa fa-arrow-left"></i></button>
+          <div><div class="ph-title" id="quiz-name">Cuestionario</div><div class="ph-sub" id="quiz-info"></div></div>
+        </div>
+      </div>
+      <div id="quiz-body"></div>
+    </div>
+
+    <!-- STUDENT: MIS NOTAS -->
+    <div class="view" id="v-sgrades">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Mis Calificaciones</div><div class="ph-sub">Cuestionarios y tareas completadas</div></div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Tipo</th><th>Curso</th><th>Actividad</th><th>Nota</th><th>Estado</th><th>Fecha</th></tr></thead>
+          <tbody id="sgrades-tb"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADMIN: CUADERNO DE CALIFICACIONES -->
+    <div class="view" id="v-gradebook">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Cuaderno de Calificaciones</div><div class="ph-sub">Reporte tipo Moodle · Configuración de notas</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="gb-actions"></div>
+      </div>
+      <div class="tabs" id="gb-tabs">
+        <div class="tab active" onclick="gbTab('report',this)"><i class="fa fa-table"></i> Reporte de Notas</div>
+        <div class="tab" onclick="gbTab('config',this)"><i class="fa fa-sliders-h"></i> Configuración</div>
+      </div>
+      <div id="gb-body"></div>
+    </div>
+
+    <!-- ADMIN: RESPALDO -->
+    <div class="view" id="v-abackup">
+      <div class="ph">
+        <div class="ph-left"><div class="ph-title">Respaldo de Datos</div><div class="ph-sub">Exporta e importa todos los datos del campus</div></div>
+      </div>
+      <div class="card" style="max-width:560px">
+        <div class="card-hd"><span class="card-title"><i class="fa fa-database" style="color:var(--primary)"></i> Gestión de Respaldo</span></div>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.7">Exporta todos los datos del campus (cursos, estudiantes, calificaciones, inscripciones) como un archivo JSON. Puedes restaurarlos importando ese mismo archivo.</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <button class="btn btn-primary" style="justify-content:center;padding:14px" onclick="exportBackup()">
+            <i class="fa fa-download"></i> Exportar Respaldo (JSON)
+          </button>
+          <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center">
+            <p style="font-size:13px;color:var(--muted);margin-bottom:12px"><i class="fa fa-upload" style="font-size:20px;display:block;margin-bottom:8px;opacity:.4"></i>Selecciona un archivo de respaldo (.json) para restaurar los datos</p>
+            <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
+            <button class="btn btn-outline" onclick="document.getElementById('backup-file-input').click()">
+              <i class="fa fa-folder-open"></i> Seleccionar archivo de respaldo
+            </button>
+          </div>
+          <div id="backup-import-msg" style="display:none;padding:12px;border-radius:9px;font-size:13px"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app-main -->
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Modal: Curso -->
+<div class="mbk" id="m-course">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title" id="mcourse-title">Nuevo Curso</div><button class="mclose" onclick="closeModal('m-course')">&times;</button></div>
+    <div class="frow">
+      <div class="ff"><label>Título *</label><input type="text" id="cf-title" placeholder="Lean Six Sigma Yellow Belt"></div>
+      <div class="ff"><label>Categoría</label>
+        <select id="cf-cat">
+          <option>Lean Six Sigma</option><option>Metodologías Ágiles</option>
+          <option>Gestión de Proyectos</option><option>Innovación</option>
+          <option>Diseño UX</option><option>Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="ff"><label>Descripción</label><textarea id="cf-desc" placeholder="Describe el contenido y objetivos del curso..."></textarea></div>
+    <div class="frow">
+      <div class="ff"><label>Duración (horas)</label><input type="number" id="cf-dur" value="40" min="1"></div>
+      <div class="ff"><label>Ícono del curso</label>
+        <div class="emoji-picker-wrap">
+          <button type="button" class="emoji-trigger" onclick="toggleEmojiPanel(event)">
+            <span id="cf-emoji-display">📊</span>
+            <span class="et-label">Clic para cambiar</span>
+          </button>
+          <input type="hidden" id="cf-emoji" value="📊">
+          <div class="emoji-panel" id="emoji-panel">
+            <div class="emoji-cat-label">Negocios y gestión</div>
+            <div class="emoji-grid">
+              <span onclick="pickEmoji('📊')">📊</span><span onclick="pickEmoji('📈')">📈</span><span onclick="pickEmoji('📉')">📉</span><span onclick="pickEmoji('💼')">💼</span><span onclick="pickEmoji('🏢')">🏢</span><span onclick="pickEmoji('📋')">📋</span><span onclick="pickEmoji('📌')">📌</span><span onclick="pickEmoji('🗂️')">🗂️</span>
+            </div>
+            <div class="emoji-cat-label">Tecnología e innovación</div>
+            <div class="emoji-grid">
+              <span onclick="pickEmoji('💡')">💡</span><span onclick="pickEmoji('🚀')">🚀</span><span onclick="pickEmoji('⚡')">⚡</span><span onclick="pickEmoji('🔧')">🔧</span><span onclick="pickEmoji('💻')">💻</span><span onclick="pickEmoji('📱')">📱</span><span onclick="pickEmoji('🤖')">🤖</span><span onclick="pickEmoji('🔬')">🔬</span>
+            </div>
+            <div class="emoji-cat-label">Educación y aprendizaje</div>
+            <div class="emoji-grid">
+              <span onclick="pickEmoji('📚')">📚</span><span onclick="pickEmoji('📖')">📖</span><span onclick="pickEmoji('✏️')">✏️</span><span onclick="pickEmoji('🎓')">🎓</span><span onclick="pickEmoji('🏆')">🏆</span><span onclick="pickEmoji('⭐')">⭐</span><span onclick="pickEmoji('🎯')">🎯</span><span onclick="pickEmoji('📝')">📝</span>
+            </div>
+            <div class="emoji-cat-label">Metodologías y proyectos</div>
+            <div class="emoji-grid">
+              <span onclick="pickEmoji('🔄')">🔄</span><span onclick="pickEmoji('⚙️')">⚙️</span><span onclick="pickEmoji('🛠️')">🛠️</span><span onclick="pickEmoji('📐')">📐</span><span onclick="pickEmoji('🗺️')">🗺️</span><span onclick="pickEmoji('🎲')">🎲</span><span onclick="pickEmoji('🧩')">🧩</span><span onclick="pickEmoji('📡')">📡</span>
+            </div>
+            <div class="emoji-cat-label">Personas y liderazgo</div>
+            <div class="emoji-grid">
+              <span onclick="pickEmoji('👥')">👥</span><span onclick="pickEmoji('🤝')">🤝</span><span onclick="pickEmoji('👑')">👑</span><span onclick="pickEmoji('💬')">💬</span><span onclick="pickEmoji('🎤')">🎤</span><span onclick="pickEmoji('🌟')">🌟</span><span onclick="pickEmoji('🧠')">🧠</span><span onclick="pickEmoji('✅')">✅</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-course')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCourse()"><i class="fa fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Estudiante -->
+<div class="mbk" id="m-student">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title">Agregar Estudiante</div><button class="mclose" onclick="closeModal('m-student')">&times;</button></div>
+    <div class="frow">
+      <div class="ff"><label>Nombre Completo *</label><input type="text" id="sf-name" placeholder="Juan Pérez García"></div>
+      <div class="ff"><label>Correo electrónico</label><input type="email" id="sf-email" placeholder="correo@ejemplo.com"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Usuario *</label><input type="text" id="sf-user" placeholder="juan.perez"></div>
+      <div class="ff"><label>Contraseña *</label><input type="password" id="sf-pass" placeholder="Mínimo 6 caracteres"></div>
+    </div>
+    <div class="ff"><label>Código de Acceso <small>(se genera automáticamente)</small></label>
+      <input type="text" id="sf-code" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-student')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStudent()"><i class="fa fa-user-plus"></i> Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Material -->
+<div class="mbk" id="m-material">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title">Agregar Material</div><button class="mclose" onclick="closeModal('m-material')">&times;</button></div>
+    <div class="ff"><label>Tipo</label>
+      <select id="mf-type" onchange="toggleMatFields()">
+        <option value="section">📌 Separador de Semana / Sección</option>
+        <option value="pdf">📄 PDF / Documento (enlace de Drive o web)</option>
+        <option value="video">▶️ Video de YouTube</option>
+        <option value="text">📝 Texto / Lectura</option>
+        <option value="html">🌐 Contenido HTML</option>
+      </select>
+    </div>
+    <!-- Sección/Banner -->
+    <div id="mf-section-wrap">
+      <div class="ff"><label>Título de la sección *</label><input type="text" id="mf-sec-title" placeholder="Semana 1 · Introducción a Lean"></div>
+      <div class="ff"><label>Subtítulo / Fechas <small>(opcional)</small></label><input type="text" id="mf-sec-sub" placeholder="Del 5 al 11 de enero · 3 materiales"></div>
+      <div class="ff"><label>Color del banner</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <button type="button" class="sec-color-btn" style="background:#E04E2E" onclick="selectBannerColor('#E04E2E',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#2C3E50" onclick="selectBannerColor('#2C3E50',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#1a5276" onclick="selectBannerColor('#1a5276',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#145a32" onclick="selectBannerColor('#145a32',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#4a235a" onclick="selectBannerColor('#4a235a',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#784212" onclick="selectBannerColor('#784212',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#1a252f" onclick="selectBannerColor('#1a252f',this)"></button>
+          <button type="button" class="sec-color-btn" style="background:#922b21" onclick="selectBannerColor('#922b21',this)"></button>
+        </div>
+        <input type="hidden" id="mf-sec-color" value="#E04E2E">
+      </div>
+    </div>
+    <!-- Título para otros tipos -->
+    <div class="ff" id="mf-title-wrap"><label>Título *</label><input type="text" id="mf-title" placeholder="Nombre del material"></div>
+    <div class="ff" id="mf-url-wrap" style="display:none"><label>URL del recurso *</label><input type="text" id="mf-url" placeholder="https://..."></div>
+    <div class="ff" id="mf-txt-wrap" style="display:none"><label>Contenido *</label><textarea id="mf-txt" style="min-height:120px" placeholder="Escribe el contenido de la lectura..."></textarea></div>
+    <div class="ff" id="mf-html-wrap" style="display:none"><label>Código HTML *</label><textarea id="mf-html" style="min-height:160px;font-family:monospace;font-size:13px" placeholder="&lt;h2&gt;Título&lt;/h2&gt;&lt;p&gt;Contenido...&lt;/p&gt;"></textarea></div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-material')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMaterial()"><i class="fa fa-plus"></i> Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cuestionario -->
+<div class="mbk" id="m-quiz">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mhd-title" id="mquiz-title">Crear Cuestionario</div><button class="mclose" onclick="closeModal('m-quiz')">&times;</button></div>
+    <div class="ff"><label>Título del cuestionario *</label><input type="text" id="qf-title" placeholder="Evaluación Módulo 1"></div>
+
+    <!-- Quiz settings: timer, attempts, shuffle -->
+    <div style="background:var(--light);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px"><i class="fa fa-sliders-h"></i> Configuración del cuestionario</div>
+      <div class="frow" style="gap:10px">
+        <!-- Timer -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <input type="checkbox" id="qf-timer-on" onchange="toggleTimerField()" style="accent-color:var(--primary);width:15px;height:15px">
+            <label for="qf-timer-on" style="font-size:13px;font-weight:600;cursor:pointer">Activar tiempo límite</label>
+          </div>
+          <div id="qf-timer-wrap" style="display:none">
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" id="qf-timer-mins" value="30" min="1" max="180" style="width:80px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px">
+              <span style="font-size:13px;color:var(--muted)">minutos</span>
+            </div>
+          </div>
+        </div>
+        <!-- Attempts -->
+        <div>
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Intentos permitidos</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="number" id="qf-attempts" value="1" min="1" max="10" style="width:70px;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:14px">
+            <span style="font-size:12px;color:var(--muted)">(1 = un solo intento)</span>
+          </div>
+        </div>
+      </div>
+      <!-- Shuffle options -->
+      <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="checkbox" id="qf-shuffle-q" style="accent-color:var(--primary);width:15px;height:15px">
+          <label for="qf-shuffle-q" style="font-size:13px;cursor:pointer">Aleatorizar orden de preguntas</label>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="checkbox" id="qf-shuffle-o" style="accent-color:var(--primary);width:15px;height:15px">
+          <label for="qf-shuffle-o" style="font-size:13px;cursor:pointer">Aleatorizar opciones de respuesta</label>
+        </div>
+      </div>
+      <!-- Fechas de disponibilidad -->
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px"><i class="fa fa-calendar-alt"></i> Disponibilidad (opcional — deja vacío para siempre disponible)</div>
+        <div class="frow" style="gap:10px">
+          <div class="ff"><label style="font-size:12px">Fecha y hora de apertura</label><input type="datetime-local" id="qf-date-open"></div>
+          <div class="ff"><label style="font-size:12px">Fecha y hora de cierre</label><input type="datetime-local" id="qf-date-close"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px"><i class="fa fa-info-circle"></i> Fuera del rango de fechas el cuestionario se bloquea automáticamente. Podés forzar apertura desde el editor de curso.</div>
+      </div>
+    </div>
+
+    <!-- Importar desde plantilla -->
+    <div class="import-box">
+      <div class="import-box-title"><i class="fa fa-file-csv" style="color:var(--success)"></i> Importar preguntas desde plantilla CSV</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button type="button" class="btn btn-success btn-sm" onclick="downloadQuizTemplate()"><i class="fa fa-download"></i> Descargar plantilla</button>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0">
+          <i class="fa fa-upload"></i> Subir CSV
+          <input type="file" accept=".csv,.txt" style="display:none" onchange="importQuizCSV(this)">
+        </label>
+        <span style="font-size:12px;color:var(--muted)">Descarga la plantilla, llénala y súbela aquí</span>
+      </div>
+      <div class="import-preview" id="quiz-import-preview"></div>
+    </div>
+
+    <div id="q-container"></div>
+    <button class="btn btn-outline" onclick="addQuestion()" style="width:100%;justify-content:center;margin-top:8px"><i class="fa fa-plus"></i> Agregar pregunta manualmente</button>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-quiz')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveQuiz()"><i class="fa fa-save"></i> Guardar Cuestionario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tarea -->
+<div class="mbk" id="m-assign">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title" id="massign-title">Crear Tarea</div><button class="mclose" onclick="closeModal('m-assign')">&times;</button></div>
+    <div class="ff"><label>Título *</label><input type="text" id="af-title" placeholder="Tarea 1: Análisis de proceso"></div>
+    <div class="ff"><label>Instrucciones *</label><textarea id="af-desc" style="min-height:100px" placeholder="Describe qué debe hacer el estudiante..."></textarea></div>
+    <div class="frow">
+      <div class="ff"><label>Fecha y hora límite</label><input type="datetime-local" id="af-due"></div>
+      <div class="ff" style="display:flex;align-items:flex-end;padding-bottom:2px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600">
+          <input type="checkbox" id="af-enforce" style="accent-color:var(--primary);width:15px;height:15px">
+          Bloquear entregas después de la fecha límite
+        </label>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:-8px;margin-bottom:10px;padding:8px 12px;background:var(--light);border-radius:7px">
+      <i class="fa fa-info-circle"></i> Si se activa el bloqueo, los estudiantes no podrán entregar después de la fecha. Podés forzar apertura desde el editor del curso.
+    </div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-assign')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAssignment()"><i class="fa fa-plus"></i> Guardar Tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Calificar Tarea -->
+<div class="mbk" id="m-grade-assign">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mhd-title" id="mga-title">Calificar Tarea</div><button class="mclose" onclick="closeModal('m-grade-assign')">&times;</button></div>
+    <div style="margin-bottom:14px;padding:10px 14px;background:var(--light);border-radius:9px;font-size:13px;color:var(--muted)" id="mga-meta"></div>
+    <div class="ff"><label>Respuesta del estudiante</label>
+      <textarea id="mga-txt" readonly style="min-height:120px;background:#fafafa;color:#555"></textarea></div>
+    <div class="frow">
+      <div class="ff"><label>Calificación (0-100)</label>
+        <input type="number" id="mga-grade" min="0" max="100" placeholder="Ej: 85"></div>
+      <div class="ff"><label>Retroalimentación</label>
+        <textarea id="mga-feedback" placeholder="Comentarios para el estudiante..."></textarea></div>
+    </div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-grade-assign')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAssignGrade()"><i class="fa fa-save"></i> Guardar Calificación</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar Estudiante -->
+<div class="mbk" id="m-edit-student">
+  <div class="modal">
+    <div class="mhd"><div class="mhd-title">Editar Estudiante</div><button class="mclose" onclick="closeModal('m-edit-student')">&times;</button></div>
+    <div class="frow">
+      <div class="ff"><label>Nombre Completo *</label><input type="text" id="edf-name" placeholder="Juan Pérez García"></div>
+      <div class="ff"><label>Correo electrónico</label><input type="email" id="edf-email" placeholder="correo@ejemplo.com"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Usuario *</label><input type="text" id="edf-user" placeholder="juan.perez"></div>
+      <div class="ff"><label>Contraseña *</label><input type="text" id="edf-pass" placeholder="contraseña"></div>
+    </div>
+    <div class="ff"><label>Código de Acceso</label><input type="text" id="edf-code" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-edit-student')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditStudent()"><i class="fa fa-save"></i> Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Progreso del Estudiante -->
+<div class="mbk" id="m-student-progress">
+  <div class="modal modal-lg">
+    <div class="mhd"><div class="mhd-title" id="msp-title">Progreso del Estudiante</div><button class="mclose" onclick="closeModal('m-student-progress')">&times;</button></div>
+    <div id="msp-body"></div>
+    <div class="mft">
+      <button class="btn btn-outline" onclick="closeModal('m-student-progress')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="app-loading" style="position:fixed;inset:0;background:linear-gradient(135deg,#2C2C2C 0%,#3A3A3A 60%,#E04E2E 100%);display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="text-align:center;color:white;">
+    <div style="font-size:52px;margin-bottom:18px;">🔥</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:8px;">Campus INNOVA 506</div>
+    <div style="font-size:14px;opacity:0.7;margin-bottom:20px;">Conectando con la base de datos...</div>
+    <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+  </div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<!-- Toast -->
+<div class="toast" id="toast-el"></div>
+
+<!-- ===================== SCRIPT ===================== -->
+<script>
+// ─── Firebase + DB helpers ────────────────────────────────────
+const _firebaseConfig = {
+  apiKey: "AIzaSyDLguVDoFBexBetUcfwBpioLqrMP1lKsIw",
+  authDomain: "campus-innova506.firebaseapp.com",
+  projectId: "campus-innova506",
+  storageBucket: "campus-innova506.firebasestorage.app",
+  messagingSenderId: "914369228358",
+  appId: "1:914369228358:web:3e9a60c619e7fe981ce447"
+};
+
+let _fbdb = null;
+const _cache = {};
+
+const DB = {
+  get: k => (_cache[k] !== undefined ? _cache[k] : null),
+  set: (k, v) => {
+    _cache[k] = v;
+    if (_fbdb) {
+      _fbdb.collection('lms').doc(k).set({ value: JSON.stringify(v) })
+        .catch(e => console.warn('Firebase sync error:', e));
+    }
+  }
+};
+
+function initDB() {
+  if (DB.get('init')) return;
+  DB.set('users',[
+    {id:'u1',name:'Jason Chaves Bastos',username:'admin',password:'innova506',role:'admin',email:'innova506@hotmail.com',accessCode:''}
+  ]);
+  DB.set('courses',[
+    {id:'c1',title:'Lean Six Sigma Yellow Belt',cat:'Lean Six Sigma',desc:'Aprende las técnicas de mejora de procesos de la metodología Lean Six Sigma.',dur:40,emoji:'📊',materials:[],quizzes:[],assignments:[]},
+    {id:'c2',title:'Lean Six Sigma Green Belt',cat:'Lean Six Sigma',desc:'Profundiza en la metodología Six Sigma para una gestión de calidad avanzada.',dur:40,emoji:'📈',materials:[],quizzes:[],assignments:[]},
+    {id:'c3',title:'Gestión de Proyectos y Metodologías Ágiles',cat:'Metodologías Ágiles',desc:'Aprende Scrum, Kanban y Lean para agilizar la gestión de proyectos.',dur:40,emoji:'🚀',materials:[],quizzes:[],assignments:[]},
+    {id:'c4',title:'Design Thinking',cat:'Innovación',desc:'Desarrolla tu creatividad e innovación aplicando la metodología Design Thinking.',dur:40,emoji:'💡',materials:[],quizzes:[],assignments:[]},
+    {id:'c5',title:'Metodología PRINCE2',cat:'Gestión de Proyectos',desc:'Adquiere conocimientos para gestionar proyectos de forma eficiente.',dur:40,emoji:'📋',materials:[],quizzes:[],assignments:[]},
+    {id:'c6',title:'Manejo Ágil de Riesgos',cat:'Metodologías Ágiles',desc:'Estrategias dinámicas para gestionar riesgos en proyectos ágiles.',dur:40,emoji:'⚡',materials:[],quizzes:[],assignments:[]},
+  ]);
+  DB.set('subs',[]);
+  DB.set('enrolls',[]);
+  DB.set('views',[]);
+  DB.set('init',true);
+}
+
+async function startApp() {
+  try {
+    firebase.initializeApp(_firebaseConfig);
+    _fbdb = firebase.firestore();
+    const snap = await _fbdb.collection('lms').get();
+    snap.forEach(doc => {
+      try { _cache[doc.id] = JSON.parse(doc.data().value); } catch(e) {}
+    });
+  } catch(e) {
+    console.warn('Firebase no disponible, usando localStorage como respaldo:', e);
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('i506_')) {
+        try { _cache[k.replace('i506_', '')] = JSON.parse(localStorage.getItem(k)); } catch(ex) {}
+      }
+    }
+  }
+  const loading = document.getElementById('app-loading');
+  if (loading) loading.style.display = 'none';
+  initDB();
+}
+
+// ─── Auth ─────────────────────────────────────────────────────
+let me = null;
+let loginMode = 'creds';
+
+function setLoginMode(m) {
+  loginMode = m;
+  document.querySelectorAll('.login-tab').forEach((t,i) => t.classList.toggle('active',(m==='creds'&&i===0)||(m==='code'&&i===1)));
+  document.getElementById('lm-creds').style.display = m==='creds'?'block':'none';
+  document.getElementById('lm-code').style.display  = m==='code' ?'block':'none';
+}
+
+function login() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value.trim();
+  const user = (DB.get('users')||[]).find(x=>x.username===u&&x.password===p);
+  user ? onLogin(user) : showErr();
+}
+
+function loginCode() {
+  const code = document.getElementById('l-code').value.trim();
+  const user = (DB.get('users')||[]).find(x=>x.accessCode===code&&(x.role==='student'||x.role==='teacher'));
+  user ? onLogin(user) : showErr();
+}
+
+function showErr() {
+  const el = document.getElementById('l-err');
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',3000);
+}
+
+function onLogin(user) {
+  me = user;
+  document.getElementById('app-login').style.display='none';
+  document.getElementById('app-main').classList.add('active');
+  document.getElementById('sb-name').textContent = user.name;
+  buildNav(user.role);
+  if (user.role==='admin') { showView('v-adash'); renderAdminDash(); }
+  else if (user.role==='teacher') { showView('v-tcourses'); renderTeacherCourses(); }
+  else { showView('v-sdash'); renderStudentDash(); }
+}
+
+function logout() {
+  clearQuizTimer();
+  me = null;
+  document.getElementById('app-main').classList.remove('active');
+  document.getElementById('app-login').style.display='flex';
+  document.getElementById('l-user').value='';
+  document.getElementById('l-pass').value='';
+}
+
+// ─── Navigation ───────────────────────────────────────────────
+function buildNav(role) {
+  const nav = document.getElementById('sb-nav');
+  if (role==='admin') {
+    nav.innerHTML = `
+      <div class="nav-sec">Administración</div>
+      <div class="nav-it" onclick="nav_adash()"><i class="fa fa-th-large"></i> Dashboard</div>
+      <div class="nav-it" onclick="nav_acourses()"><i class="fa fa-book"></i> Cursos</div>
+      <div class="nav-it" onclick="nav_astudents()"><i class="fa fa-users"></i> Usuarios</div>
+      <div class="nav-it" onclick="nav_agrades()"><i class="fa fa-chart-bar"></i> Calificaciones</div>
+      <div class="nav-it" onclick="nav_gradebook()"><i class="fa fa-table"></i> Cuaderno de Notas</div>
+      <div class="nav-it" onclick="nav_abackup()"><i class="fa fa-database"></i> Respaldo</div>`;
+  } else if (role==='teacher') {
+    nav.innerHTML = `
+      <div class="nav-sec">Docente</div>
+      <div class="nav-it" onclick="nav_tcourses()"><i class="fa fa-book"></i> Mis Cursos</div>
+      <div class="nav-it" onclick="nav_agrades()"><i class="fa fa-chart-bar"></i> Calificaciones</div>`;
+  } else {
+    nav.innerHTML = `
+      <div class="nav-sec">Mi Campus</div>
+      <div class="nav-it" onclick="nav_sdash()"><i class="fa fa-home"></i> Mis Cursos</div>
+      <div class="nav-it" onclick="nav_sgrades()"><i class="fa fa-star"></i> Mis Notas</div>`;
+  }
+}
+
+function setNav(i) {
+  document.querySelectorAll('.nav-it').forEach((n,idx) => n.classList.toggle('active',idx===i));
+}
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('mobile-overlay').classList.toggle('active');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('mobile-overlay').classList.remove('active');
+}
+function showView(id) {
+  if (id!=='v-squiz') clearQuizTimer();
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  closeSidebar();
+}
+
+function nav_adash()      { showView('v-adash');     renderAdminDash();    setNav(0); }
+function nav_acourses()   { showView('v-acourses');  renderAdminCourses(); setNav(1); }
+function nav_astudents()  { showView('v-astudents'); renderStudentsTb();   setNav(2); }
+function nav_agrades()    { showView('v-agrades');   renderAdminGrades();  setNav(me.role==='teacher'?1:3); }
+function nav_gradebook()  { showView('v-gradebook'); gbTabActive='report'; renderGradeBook(); setNav(4); }
+function nav_abackup()    { showView('v-abackup');                         setNav(5); }
+function nav_sdash()     { showView('v-sdash');    renderStudentDash();  setNav(0); }
+function nav_sgrades()   { showView('v-sgrades');  renderStudentGrades();setNav(1); }
+
+// ─── Admin Dashboard ──────────────────────────────────────────
+function renderAdminDash() {
+  const courses  = DB.get('courses')||[];
+  const users    = DB.get('users')||[];
+  const subs     = DB.get('subs')||[];
+  const enrolls  = DB.get('enrolls')||[];
+  const students = users.filter(u=>u.role==='student');
+  const quizSubs = subs.filter(s=>s.type==='quiz');
+
+  // Compute enhanced stats
+  const avgGrade = quizSubs.length
+    ? Math.round(quizSubs.reduce((acc,s)=>acc+Math.round((s.score/s.max)*100),0)/quizSubs.length)
+    : 0;
+  const passRate = quizSubs.length
+    ? Math.round((quizSubs.filter(s=>Math.round((s.score/s.max)*100)>=getGradeConfig().passThreshold).length/quizSubs.length)*100)
+    : 0;
+
+  document.getElementById('adash-stats').innerHTML = `
+    <div class="stat"><div class="stat-icon" style="background:#fde8e3;color:var(--primary)"><i class="fa fa-book"></i></div><div class="stat-val">${courses.length}</div><div class="stat-lbl">Cursos activos</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#d4edda;color:var(--success)"><i class="fa fa-users"></i></div><div class="stat-val">${students.length}</div><div class="stat-lbl">Estudiantes</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#d0e8f5;color:var(--info)"><i class="fa fa-check-circle"></i></div><div class="stat-val">${quizSubs.length}</div><div class="stat-lbl">Cuestionarios hechos</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#fff3cd;color:#856404"><i class="fa fa-link"></i></div><div class="stat-val">${enrolls.length}</div><div class="stat-lbl">Inscripciones totales</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#e8d0f5;color:#6f42c1"><i class="fa fa-percentage"></i></div><div class="stat-val">${avgGrade}%</div><div class="stat-lbl">Nota promedio general</div></div>
+    <div class="stat"><div class="stat-icon" style="background:#d0f5e8;color:#20c997"><i class="fa fa-award"></i></div><div class="stat-val">${passRate}%</div><div class="stat-lbl">Tasa de aprobación</div></div>`;
+
+  // Top 5 students by average score
+  const studentAvgs = students.map(st=>{
+    const mySubs = quizSubs.filter(s=>s.sid===st.id);
+    const avg = mySubs.length ? Math.round(mySubs.reduce((a,s)=>a+Math.round((s.score/s.max)*100),0)/mySubs.length) : null;
+    return {name:st.name, avg, count:mySubs.length};
+  }).filter(x=>x.avg!==null).sort((a,b)=>b.avg-a.avg).slice(0,5);
+
+  // Courses most active (by quiz attempt count)
+  const courseActivity = courses.map(c=>{
+    const attempts = quizSubs.filter(s=>s.cid===c.id).length;
+    const enrolled = enrolls.filter(e=>e.cid===c.id).length;
+    const courseSubs = quizSubs.filter(s=>s.cid===c.id);
+    const avgScore = courseSubs.length ? Math.round(courseSubs.reduce((a,s)=>a+Math.round((s.score/s.max)*100),0)/courseSubs.length) : 0;
+    return {title:c.title, emoji:c.emoji||'📚', attempts, enrolled, avgScore};
+  }).sort((a,b)=>b.attempts-a.attempts);
+
+  // Enhanced dashboard cards
+  const dashExtra = document.getElementById('adash-enroll');
+  dashExtra.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="fa fa-trophy" style="color:#f39c12"></i> Top 5 Estudiantes</div>
+        ${studentAvgs.length ? studentAvgs.map((s,i)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="width:24px;height:24px;border-radius:50%;background:${i===0?'#f39c12':i===1?'#bdc3c7':i===2?'#cd7f32':'var(--border)'};color:${i<3?'white':'var(--muted)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+              <div style="font-size:11px;color:var(--muted)">${s.count} cuestionario(s)</div></div>
+            <span class="badge ${s.avg>=getGradeConfig().passThreshold?'b-green':'b-red'}">${s.avg}%</span>
+          </div>`).join('')
+        : '<div style="color:var(--muted);font-size:13px;padding:12px 0">Sin datos aún</div>'}
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="fa fa-fire" style="color:var(--primary)"></i> Cursos más activos</div>
+        ${courseActivity.map(c=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:20px">${c.emoji}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.title}</div>
+              <div style="font-size:11px;color:var(--muted)">${c.enrolled} inscritos &bull; ${c.attempts} intentos</div>
+            </div>
+            ${c.attempts>0?`<span class="badge b-blue">${c.avgScore}% prom.</span>`:'<span class="badge b-gray">Sin actividad</span>'}
+          </div>`).join('')}
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="fa fa-clock" style="color:var(--info)"></i> Inscripciones recientes</div>
+      ${enrolls.length ? `<table>
+        <thead><tr><th>Estudiante</th><th>Curso</th><th>Estado</th></tr></thead>
+        <tbody>${[...enrolls].reverse().slice(0,6).map(e=>{
+          const s=users.find(u=>u.id===e.sid), c=courses.find(x=>x.id===e.cid);
+          return `<tr><td>${s?s.name:'-'}</td><td>${c?c.title:'-'}</td><td><span class="badge b-green">Inscrito</span></td></tr>`;
+        }).join('')}</tbody></table>`
+      : '<div class="empty"><i class="fa fa-inbox"></i><p>Sin inscripciones aún</p></div>'}
+    </div>`;
+}
+
+// ─── Courses (Admin) ──────────────────────────────────────────
+const COLORS = ['#fde8e3','#d4edda','#d0e8f5','#fff3cd','#e8d0f5','#d0f5e8'];
+
+function renderAdminCourses() {
+  const courses = DB.get('courses')||[];
+  const grid = document.getElementById('acourses-grid');
+  if (!courses.length) { grid.innerHTML='<div class="empty"><i class="fa fa-book"></i><p>No hay cursos. Crea el primero.</p></div>'; return; }
+  grid.innerHTML = courses.map((c,i)=>`
+    <div class="cc">
+      <div class="cc-head" style="background:${COLORS[i%COLORS.length]}">${c.emoji||'📚'}</div>
+      <div class="cc-body">
+        <div class="cc-title">${c.title}</div>
+        <div class="cc-desc">${c.desc}</div>
+        <span class="badge b-orange">${c.cat}</span> <span class="badge b-gray">${c.dur}h</span>
+        <div class="cc-actions">
+          <button class="btn btn-outline btn-sm" onclick="openCourseModal('${c.id}')"><i class="fa fa-edit"></i> Editar</button>
+          <button class="btn btn-primary btn-sm" onclick="openEditor('${c.id}')"><i class="fa fa-cog"></i> Contenido</button>
+          <button class="btn btn-danger btn-sm" onclick="delCourse('${c.id}')"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+let editCid = null;
+function openCourseModal(id) {
+  editCid = id||null;
+  if (id) {
+    const c=(DB.get('courses')||[]).find(x=>x.id===id);
+    document.getElementById('cf-title').value=c.title;
+    document.getElementById('cf-cat').value=c.cat;
+    document.getElementById('cf-desc').value=c.desc;
+    document.getElementById('cf-dur').value=c.dur;
+    setEmojiPicker(c.emoji||'📚');
+    document.getElementById('mcourse-title').textContent='Editar Curso';
+  } else {
+    ['cf-title','cf-desc'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('cf-dur').value=40;
+    setEmojiPicker('📊');
+    document.getElementById('mcourse-title').textContent='Nuevo Curso';
+  }
+  openModal('m-course');
+}
+
+function saveCourse() {
+  const title = document.getElementById('cf-title').value.trim();
+  if (!title) { toast('El título es requerido','err'); return; }
+  const courses = DB.get('courses')||[];
+  const data = {id:editCid||'c'+Date.now(),title,cat:document.getElementById('cf-cat').value,desc:document.getElementById('cf-desc').value,dur:parseInt(document.getElementById('cf-dur').value)||40,emoji:document.getElementById('cf-emoji').value||'📚',materials:[],quizzes:[],assignments:[]};
+  if (editCid) { const i=courses.findIndex(x=>x.id===editCid); Object.assign(data,{materials:courses[i].materials,quizzes:courses[i].quizzes,assignments:courses[i].assignments}); courses[i]=data; }
+  else courses.push(data);
+  DB.set('courses',courses); closeModal('m-course'); renderAdminCourses(); toast('Curso guardado');
+}
+
+function delCourse(id) {
+  if (!confirm('¿Eliminar este curso y todo su contenido?')) return;
+  DB.set('courses',(DB.get('courses')||[]).filter(c=>c.id!==id));
+  renderAdminCourses(); toast('Curso eliminado');
+}
+
+// ─── Course Editor ────────────────────────────────────────────
+let edCourse = null, edTab = 'content';
+
+function _legacyContentOrder(c) {
+  if (c.contentOrder && c.contentOrder.length) return [...c.contentOrder];
+  if (c.courseOrder) { const m=c.courseOrder.filter(x=>x.type==='material'); if(m.length) return [...m]; }
+  return (c.materials||[]).map(m=>({type:'material',id:m.id}));
+}
+function _legacyEvalOrder(c) {
+  if (c.evalOrder && c.evalOrder.length) return [...c.evalOrder];
+  if (c.courseOrder) { const e=c.courseOrder.filter(x=>x.type==='quiz'||x.type==='assignment'); if(e.length) return [...e]; }
+  const o=[]; (c.quizzes||[]).forEach(q=>o.push({type:'quiz',id:q.id})); (c.assignments||[]).forEach(a=>o.push({type:'assignment',id:a.id})); return o;
+}
+
+function getUnifiedOrder(c) {
+  if (c.unifiedOrder) return [...c.unifiedOrder];
+  // Migrate: interleave contentOrder + evalOrder by matching section names
+  const co=_legacyContentOrder(c), eo=_legacyEvalOrder(c);
+  const evalGroups=[]; let curG={sec:null,title:'',items:[]};
+  eo.forEach(item=>{
+    if (item.type==='evalsec') {
+      if (curG.items.length||curG.sec) evalGroups.push(curG);
+      const s=(c.evalSections||[]).find(x=>x.id===item.id);
+      curG={sec:s, title:(s?.title||'').trim().toLowerCase(), items:[]};
+    } else { curG.items.push(item); }
+  });
+  if (curG.items.length||curG.sec) evalGroups.push(curG);
+  const used=new Set(), unified=[];
+  let curSecTitle='';
+  const flush=()=>{
+    if(!curSecTitle) return;
+    const key=curSecTitle.trim().toLowerCase();
+    const idx=evalGroups.findIndex((g,i)=>!used.has(i)&&g.title===key);
+    if(idx>=0){ used.add(idx); evalGroups[idx].items.forEach(ei=>unified.push(ei)); }
+  };
+  co.forEach(item=>{
+    const m=(c.materials||[]).find(x=>x.id===item.id);
+    if(m&&m.type==='section'){ flush(); curSecTitle=m.title||''; }
+    unified.push(item);
+  });
+  flush();
+  evalGroups.forEach((g,i)=>{
+    if(used.has(i)) return;
+    if(g.sec) unified.push({type:'evalsec',id:g.sec.id});
+    g.items.forEach(ei=>unified.push(ei));
+  });
+  return unified;
+}
+
+function getContentOrder(c) { return getUnifiedOrder(c).filter(i=>i.type==='material'); }
+function getEvalOrder(c)    { return getUnifiedOrder(c).filter(i=>i.type!=='material'); }
+
+function moveUnifiedItem(dir,idx) {
+  const courses=DB.get('courses')||[], ci=courses.findIndex(c=>c.id===edCourse.id);
+  const order=getUnifiedOrder(courses[ci]);
+  const ni=idx+dir; if(ni<0||ni>=order.length) return;
+  [order[idx],order[ni]]=[order[ni],order[idx]];
+  courses[ci].unifiedOrder=order; edCourse=courses[ci]; DB.set('courses',courses); renderEditorBody();
+}
+
+let _evalSecContext = false;
+
+function editorBack() {
+  if (me.role==='teacher') { showView('v-tcourses'); renderTeacherCourses(); }
+  else { showView('v-acourses'); renderAdminCourses(); }
+}
+
+function openEditor(id) {
+  edCourse = (DB.get('courses')||[]).find(c=>c.id===id);
+  document.getElementById('editor-title').textContent = edCourse.title;
+  const tabs=document.getElementById('editor-tabs');
+  if (me.role==='teacher') {
+    tabs.innerHTML=`
+      <div class="tab active" onclick="editorTab('content',this)">Contenido</div>
+      <div class="tab" onclick="editorTab('enroll',this)">Estudiantes</div>`;
+  } else {
+    tabs.innerHTML=`
+      <div class="tab active" onclick="editorTab('content',this)">Contenido</div>
+      <div class="tab" onclick="editorTab('grades',this)">Calificaciones</div>
+      <div class="tab" onclick="editorTab('enroll',this)">Estudiantes</div>`;
+  }
+  edTab='content'; showView('v-editor'); renderEditorBody();
+}
+
+function editorTab(tab,el) {
+  edTab=tab;
+  document.querySelectorAll('#editor-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); renderEditorBody();
+}
+
+function renderEditorBody() {
+  const el = document.getElementById('editor-body');
+  const c = edCourse;
+  if (edTab==='content') {
+    const order = getUnifiedOrder(c);
+    const matTypeBg    = {pdf:'#fde8e3', video:'#d4edda', text:'#d0e8f5', html:'#fff3cd'};
+    const matTypeColor = {pdf:'var(--primary)', video:'var(--success)', text:'var(--info)', html:'#856404'};
+    const matTypeIcon  = {pdf:'file-pdf', video:'play-circle', text:'align-left', html:'code'};
+    const matTypeLabel = {pdf:'PDF/Documento', video:'Video YouTube', text:'Lectura', html:'HTML'};
+    let itemsHtml='';
+    order.forEach((item,idx)=>{
+      const isFirst=idx===0, isLast=idx===order.length-1;
+      const arrows=`<div class="content-item-arrows">
+        <button class="move-btn" onclick="moveUnifiedItem(-1,${idx})" ${isFirst?'disabled':''}><i class="fa fa-chevron-up"></i></button>
+        <button class="move-btn" onclick="moveUnifiedItem(1,${idx})" ${isLast?'disabled':''}><i class="fa fa-chevron-down"></i></button>
+      </div>`;
+      if (item.type==='material') {
+        const m=(c.materials||[]).find(x=>x.id===item.id); if(!m) return;
+        if (m.type==='section') { itemsHtml+=`<div class="content-item" style="background:${m.color}12;border-color:${m.color}55">
+          ${arrows}
+          <div class="mat-icon" style="background:${m.color};color:white;flex-shrink:0"><i class="fa fa-bookmark"></i></div>
+          <div class="content-item-body">
+            <div class="mat-title" style="color:${m.color}">${m.title}</div>
+            ${m.subtitle?`<div class="mat-type">${m.subtitle}</div>`:''}
+          </div>
+          <span class="badge" style="background:${m.color}22;color:${m.color};font-size:10px;flex-shrink:0">SEMANA</span>
+          <div class="content-item-actions">
+            <button class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>`; return; }
+        itemsHtml+=`<div class="content-item">
+          ${arrows}
+          <div class="mat-icon" style="background:${matTypeBg[m.type]||'#eee'};color:${matTypeColor[m.type]||'#333'};flex-shrink:0">
+            <i class="fa fa-${matTypeIcon[m.type]||'file'}"></i></div>
+          <div class="content-item-body">
+            <div class="mat-title">${m.title}</div>
+            <div class="mat-type">${matTypeLabel[m.type]||m.type}</div>
+          </div>
+          <div class="content-item-actions">
+            <button class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>`;
+      } else if (item.type==='evalsec') {
+        const s=(c.evalSections||[]).find(x=>x.id===item.id); if(!s) return;
+        itemsHtml+=`<div class="content-item" style="background:${s.color}12;border-color:${s.color}55">
+          ${arrows}
+          <div class="mat-icon" style="background:${s.color};color:white;flex-shrink:0"><i class="fa fa-bookmark"></i></div>
+          <div class="content-item-body">
+            <div class="mat-title" style="color:${s.color}">${s.title}</div>
+            ${s.subtitle?`<div class="mat-type">${s.subtitle}</div>`:''}
+          </div>
+          <span class="badge" style="background:${s.color}22;color:${s.color};font-size:10px;flex-shrink:0">SEMANA</span>
+          <div class="content-item-actions">
+            <button class="btn btn-danger btn-sm" onclick="delEvalSec('${s.id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>`;
+      } else if (item.type==='quiz') {
+        const q=(c.quizzes||[]).find(x=>x.id===item.id); if(!q) return;
+        const locked=isQuizDateLocked(q);
+        itemsHtml+=`<div class="content-item" style="${locked&&!q.forceOpen?'border-color:#e74c3c55;background:#fff8f8':''}">
+          ${arrows}
+          <div class="mat-icon" style="background:#e8eaf6;color:var(--primary);flex-shrink:0"><i class="fa fa-question-circle"></i></div>
+          <div class="content-item-body">
+            <div class="mat-title">${q.title}
+              ${locked&&!q.forceOpen?`<span class="badge b-red" style="margin-left:5px;font-size:10px"><i class="fa fa-lock"></i> Bloqueado</span>`:''}
+              ${q.forceOpen?`<span class="badge b-green" style="margin-left:5px;font-size:10px"><i class="fa fa-unlock-alt"></i> Forzado</span>`:''}
+            </div>
+            <div class="mat-type">Cuestionario · ${q.questions.length} preguntas${q.timeLimit>0?` · ${q.timeLimit} min`:''}${q.dateOpen?` · Abre: ${formatDatetime(q.dateOpen)}`:''}${q.dateClose?` · Cierra: ${formatDatetime(q.dateClose)}`:''}</div>
+          </div>
+          <div class="content-item-actions">
+            ${locked||q.forceOpen?`<button class="btn btn-sm ${q.forceOpen?'btn-warning':'btn-success'}" title="${q.forceOpen?'Quitar apertura forzada':'Forzar apertura'}" onclick="toggleQuizForceOpen('${c.id}','${q.id}')"><i class="fa fa-${q.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
+            <button class="btn btn-outline btn-sm" onclick="openQuizModal('${q.id}')"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="delQuiz('${q.id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>`;
+      } else if (item.type==='assignment') {
+        const a=(c.assignments||[]).find(x=>x.id===item.id); if(!a) return;
+        const overdue=isAssignLocked(a);
+        itemsHtml+=`<div class="content-item" style="${overdue?'border-color:#e74c3c55;background:#fff8f8':''}">
+          ${arrows}
+          <div class="mat-icon" style="background:#fff3e0;color:#e67e22;flex-shrink:0"><i class="fa fa-tasks"></i></div>
+          <div class="content-item-body">
+            <div class="mat-title">${a.title}
+              ${overdue?`<span class="badge b-red" style="margin-left:5px;font-size:10px"><i class="fa fa-lock"></i> Cerrada</span>`:''}
+              ${a.forceOpen?`<span class="badge b-green" style="margin-left:5px;font-size:10px"><i class="fa fa-unlock-alt"></i> Forzada</span>`:''}
+            </div>
+            <div class="mat-type">Tarea${a.due?` · Límite: ${formatDatetime(a.due)}`:''}${a.enforceDue?' · Bloqueo activo':''}</div>
+          </div>
+          <div class="content-item-actions">
+            ${overdue||a.forceOpen?`<button class="btn btn-sm ${a.forceOpen?'btn-warning':'btn-success'}" title="${a.forceOpen?'Quitar apertura':'Forzar apertura'}" onclick="toggleAssignForceOpen('${c.id}','${a.id}')"><i class="fa fa-${a.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
+            <button class="btn btn-outline btn-sm" onclick="openAssignModal('${a.id}')"><i class="fa fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm" onclick="delAssign('${a.id}')"><i class="fa fa-trash"></i></button>
+          </div>
+        </div>`;
+      }
+    });
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-primary btn-sm" onclick="openMatModal()"><i class="fa fa-plus"></i> Material</button>
+        <button class="btn btn-primary btn-sm" style="background:#5b6abf" onclick="openQuizModal()"><i class="fa fa-plus"></i> Cuestionario</button>
+        <button class="btn btn-outline btn-sm" onclick="openAssignModal()"><i class="fa fa-plus"></i> Tarea</button>
+      </div>
+      ${itemsHtml || '<div class="empty"><i class="fa fa-folder-open"></i><p>Sin contenido aún. Agrega materiales, cuestionarios o tareas.</p></div>'}`;
+
+  } else if (edTab==='grades') {
+    renderCourseGradeBook(el, c);
+    return;
+  } else if (edTab==='enroll') {
+    const allUsers = DB.get('users')||[];
+    const teachers = allUsers.filter(u=>u.role==='teacher');
+    const students = allUsers.filter(u=>u.role==='student');
+    const enrolls = DB.get('enrolls')||[];
+    let h='';
+    // Docentes asignados
+    if (teachers.length) {
+      h+=`<div style="margin-bottom:18px">
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px"><i class="fa fa-chalkboard-teacher" style="color:#5b6abf"></i> Docentes</div>
+        <table><thead><tr><th>Docente</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>${teachers.map(t=>{
+          const ok=enrolls.some(e=>e.sid===t.id&&e.cid===edCourse.id);
+          return `<tr><td>${t.name}<br><small style="color:var(--muted)">${t.email||''}</small></td>
+            <td><span class="badge ${ok?'b-green':'b-gray'}">${ok?'Asignado':'Sin asignar'}</span></td>
+            <td><button class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${t.id}')">${ok?'Desasignar':'Asignar'}</button></td></tr>`;
+        }).join('')}</tbody></table>
+      </div>`;
+    }
+    // Estudiantes inscritos
+    h+=`<div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px"><i class="fa fa-user-graduate" style="color:var(--primary)"></i> Estudiantes</div>`;
+    if (students.length) {
+      h+=`<table><thead><tr><th>Estudiante</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>${students.map(s=>{
+          const ok=enrolls.some(e=>e.sid===s.id&&e.cid===edCourse.id);
+          return `<tr><td>${s.name}<br><small style="color:var(--muted)">${s.email||''}</small></td>
+            <td><span class="badge ${ok?'b-green':'b-gray'}">${ok?'Inscrito':'Sin inscribir'}</span></td>
+            <td><button class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${s.id}')">${ok?'Desinscribir':'Inscribir'}</button></td></tr>`;
+        }).join('')}</tbody></table>`;
+    } else {
+      h+='<div class="empty"><i class="fa fa-users"></i><p>No hay estudiantes registrados aún</p></div>';
+    }
+    h+='</div>';
+    el.innerHTML=h;
+  }
+}
+
+function toggleEnroll(sid) {
+  const enrolls = DB.get('enrolls')||[];
+  const i = enrolls.findIndex(e=>e.sid===sid&&e.cid===edCourse.id);
+  i>=0 ? enrolls.splice(i,1) : enrolls.push({sid,cid:edCourse.id});
+  DB.set('enrolls',enrolls); renderEditorBody();
+  toast(i>=0?'Desinscrito':'¡Estudiante inscrito!');
+}
+
+// Materials
+let _editMatId = null;
+function toggleMatFields() {
+  const t = document.getElementById('mf-type').value;
+  const isSection = t === 'section';
+  document.getElementById('mf-section-wrap').style.display = isSection ? 'block' : 'none';
+  document.getElementById('mf-title-wrap').style.display  = isSection ? 'none'  : 'block';
+  document.getElementById('mf-url-wrap').style.display    = (!isSection && t !== 'text' && t !== 'html') ? 'block' : 'none';
+  document.getElementById('mf-txt-wrap').style.display    = t === 'text' ? 'block' : 'none';
+  document.getElementById('mf-html-wrap').style.display   = t === 'html' ? 'block' : 'none';
+}
+function selectBannerColor(color, btn) {
+  document.getElementById('mf-sec-color').value = color;
+  document.querySelectorAll('.sec-color-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+function saveMaterial() {
+  const type = document.getElementById('mf-type').value;
+  const courses = DB.get('courses')||[], i = courses.findIndex(c=>c.id===edCourse.id);
+  let mat;
+  if (type === 'section') {
+    const secTitle = document.getElementById('mf-sec-title').value.trim();
+    if (!secTitle) { toast('El título de la sección es requerido','err'); return; }
+    const secData = {type:'section', title:secTitle,
+           subtitle: document.getElementById('mf-sec-sub').value.trim(),
+           color: document.getElementById('mf-sec-color').value};
+    if (_editMatId) {
+      const mi=courses[i].materials.findIndex(m=>m.id===_editMatId);
+      if (mi>=0) courses[i].materials[mi]={...courses[i].materials[mi],...secData};
+      _editMatId=null; _evalSecContext=false;
+      edCourse=courses[i]; DB.set('courses',courses); closeModal('m-material'); renderEditorBody(); toast('Separador actualizado');
+      return;
+    }
+    mat = {id:'m'+Date.now(), ...secData};
+    courses[i].materials.push(mat);
+    if (!courses[i].unifiedOrder) courses[i].unifiedOrder=getUnifiedOrder(courses[i]);
+    courses[i].unifiedOrder.push({type:'material',id:mat.id});
+  } else {
+    const title = document.getElementById('mf-title').value.trim();
+    const url   = document.getElementById('mf-url').value.trim();
+    const txt   = document.getElementById('mf-txt').value.trim();
+    const html  = document.getElementById('mf-html').value.trim();
+    if (!title) { toast('El título es requerido','err'); return; }
+    if ((type==='pdf'||type==='video') && !url) { toast('La URL es requerida','err'); return; }
+    if (type==='text' && !txt)  { toast('El contenido es requerido','err'); return; }
+    if (type==='html' && !html) { toast('El HTML es requerido','err'); return; }
+    if (_editMatId) {
+      const mi=courses[i].materials.findIndex(m=>m.id===_editMatId);
+      if (mi>=0) courses[i].materials[mi]={...courses[i].materials[mi], type, title, url, txt, html};
+      _editMatId=null;
+      edCourse=courses[i]; DB.set('courses',courses); closeModal('m-material'); renderEditorBody(); toast('Material actualizado');
+      return;
+    }
+    mat = {id:'m'+Date.now(), type, title, url, txt, html};
+    courses[i].materials.push(mat);
+    if (!courses[i].unifiedOrder) courses[i].unifiedOrder=getUnifiedOrder(courses[i]);
+    courses[i].unifiedOrder.push({type:'material',id:mat.id});
+  }
+  _editMatId=null; _evalSecContext=false;
+  edCourse=courses[i]; DB.set('courses',courses); closeModal('m-material'); renderEditorBody(); toast('Material agregado');
+}
+function openMatModal(editId) {
+  _evalSecContext=false;
+  _editMatId = editId||null;
+  const mhdEl=document.querySelector('#m-material .mhd-title');
+  const saveBtnEl=document.querySelector('#m-material .mft .btn-primary');
+  if (mhdEl) mhdEl.textContent=editId?'Editar Material':'Agregar Material';
+  if (saveBtnEl) saveBtnEl.innerHTML=editId?'<i class="fa fa-save"></i> Guardar Cambios':'<i class="fa fa-plus"></i> Agregar';
+  if (editId) {
+    const m=(edCourse.materials||[]).find(x=>x.id===editId);
+    if (!m) { toast('Material no encontrado','err'); return; }
+    document.getElementById('mf-type').value=m.type;
+    if (m.type==='section') {
+      document.getElementById('mf-sec-title').value=m.title||'';
+      document.getElementById('mf-sec-sub').value=m.subtitle||'';
+      const color=m.color||'#E04E2E';
+      document.getElementById('mf-sec-color').value=color;
+      document.querySelectorAll('.sec-color-btn').forEach(b=>b.classList.toggle('selected',b.style.background===color));
+    } else {
+      document.getElementById('mf-title').value=m.title||'';
+      document.getElementById('mf-url').value=m.url||'';
+      document.getElementById('mf-txt').value=m.txt||'';
+      document.getElementById('mf-html').value=m.html||'';
+    }
+    toggleMatFields();
+  } else {
+    ['mf-title','mf-url','mf-txt','mf-html','mf-sec-title','mf-sec-sub'].forEach(x=>{ const el=document.getElementById(x); if(el) el.value=''; });
+    document.getElementById('mf-sec-color').value='#E04E2E';
+    document.querySelectorAll('.sec-color-btn').forEach((b,i)=>b.classList.toggle('selected',i===0));
+    document.getElementById('mf-type').value='section'; toggleMatFields();
+  }
+  openModal('m-material');
+}
+function delMaterial(id) {
+  if (!confirm('¿Eliminar este material?')) return;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  courses[i].materials=courses[i].materials.filter(m=>m.id!==id);
+  if (courses[i].unifiedOrder) courses[i].unifiedOrder=courses[i].unifiedOrder.filter(x=>x.id!==id);
+  if (courses[i].contentOrder) courses[i].contentOrder=courses[i].contentOrder.filter(x=>x.id!==id);
+  edCourse=courses[i]; DB.set('courses',courses); renderEditorBody(); toast('Material eliminado');
+}
+function delEvalSec(id) {
+  if (!confirm('¿Eliminar este separador?')) return;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  courses[i].evalSections=(courses[i].evalSections||[]).filter(s=>s.id!==id);
+  if (courses[i].unifiedOrder) courses[i].unifiedOrder=courses[i].unifiedOrder.filter(x=>x.id!==id);
+  if (courses[i].evalOrder) courses[i].evalOrder=courses[i].evalOrder.filter(x=>x.id!==id);
+  edCourse=courses[i]; DB.set('courses',courses); renderEditorBody(); toast('Separador eliminado');
+}
+
+// Quizzes builder
+let qqList = [], editQuizId = null;
+
+function toggleTimerField() {
+  const on = document.getElementById('qf-timer-on').checked;
+  document.getElementById('qf-timer-wrap').style.display = on ? 'block' : 'none';
+}
+
+function openQuizModal(qid) {
+  editQuizId = qid || null;
+  qqList = [];
+  document.getElementById('qf-title').value = '';
+  document.getElementById('qf-timer-on').checked = false;
+  document.getElementById('qf-timer-wrap').style.display = 'none';
+  document.getElementById('qf-timer-mins').value = 30;
+  document.getElementById('qf-attempts').value = 1;
+  document.getElementById('qf-shuffle-q').checked = false;
+  document.getElementById('qf-shuffle-o').checked = false;
+  document.getElementById('qf-date-open').value = '';
+  document.getElementById('qf-date-close').value = '';
+  document.getElementById('quiz-import-preview').innerHTML = '';
+  document.getElementById('mquiz-title').textContent = 'Crear Cuestionario';
+
+  if (qid) {
+    const courses = DB.get('courses') || [];
+    const c = courses.find(x => x.id === edCourse.id);
+    const q = c ? c.quizzes.find(x => x.id === qid) : null;
+    if (q) {
+      document.getElementById('qf-title').value = q.title;
+      const tl = q.timeLimit || 0;
+      document.getElementById('qf-timer-on').checked = tl > 0;
+      document.getElementById('qf-timer-wrap').style.display = tl > 0 ? 'block' : 'none';
+      document.getElementById('qf-timer-mins').value = tl > 0 ? tl : 30;
+      document.getElementById('qf-attempts').value = q.maxAttempts || 1;
+      document.getElementById('qf-shuffle-q').checked = q.shuffleQuestions || false;
+      document.getElementById('qf-shuffle-o').checked = q.shuffleOptions || false;
+      document.getElementById('qf-date-open').value = q.dateOpen || '';
+      document.getElementById('qf-date-close').value = q.dateClose || '';
+      qqList = q.questions.map(qq => ({...qq, opts: [...qq.opts]}));
+      document.getElementById('mquiz-title').textContent = 'Editar Cuestionario';
+    }
+  }
+
+  if (!qqList.length) addQuestion();
+  else renderQBuilder();
+  openModal('m-quiz');
+}
+function addQuestion() {
+  qqList.push({id:'qq'+Date.now()+qqList.length,text:'',opts:['','','',''],correct:0,pts:10});
+  renderQBuilder();
+}
+function renderQBuilder() {
+  document.getElementById('q-container').innerHTML = qqList.map((q,qi)=>`
+    <div class="qcard" style="border-left:3px solid var(--primary)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong style="color:var(--primary)">Pregunta ${qi+1}</strong>
+        ${qqList.length>1?`<button class="btn btn-danger btn-sm" onclick="removeQ('${q.id}')"><i class="fa fa-times"></i></button>`:''}
+      </div>
+      <div class="ff"><label>Enunciado *</label>
+        <textarea oninput="updateQ('${q.id}','text',this.value)" style="min-height:60px">${q.text}</textarea></div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--muted)">OPCIONES (marca la correcta con el círculo):</div>
+      ${q.opts.map((o,oi)=>`
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="radio" name="cr_${q.id}" ${q.correct===oi?'checked':''} onchange="updateQ('${q.id}','correct',${oi})" style="accent-color:var(--primary);flex-shrink:0;width:16px;height:16px">
+          <input type="text" value="${o}" oninput="updateQ('${q.id}','opt${oi}',this.value)" placeholder="Opción ${oi+1}" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px">
+        </div>`).join('')}
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <label style="font-size:12px;font-weight:700">Puntos:</label>
+        <input type="number" value="${q.pts}" min="1" oninput="updateQ('${q.id}','pts',parseInt(this.value)||10)" style="width:70px;padding:6px 10px;border:1.5px solid var(--border);border-radius:7px">
+      </div>
+    </div>`).join('');
+}
+function updateQ(id,field,val) {
+  const q=qqList.find(x=>x.id===id); if(!q)return;
+  if (field.startsWith('opt')) q.opts[parseInt(field.replace('opt',''))]=val;
+  else q[field]=val;
+}
+function removeQ(id) { qqList=qqList.filter(q=>q.id!==id); renderQBuilder(); }
+function saveQuiz() {
+  const title=document.getElementById('qf-title').value.trim();
+  if (!title) { toast('El título es requerido','err'); return; }
+  if (qqList.some(q=>!q.text.trim())) { toast('Completa todas las preguntas','err'); return; }
+  const timerOn = document.getElementById('qf-timer-on').checked;
+  const timeLimit = timerOn ? (parseInt(document.getElementById('qf-timer-mins').value)||30) : 0;
+  const maxAttempts = parseInt(document.getElementById('qf-attempts').value)||1;
+  const shuffleQuestions = document.getElementById('qf-shuffle-q').checked;
+  const shuffleOptions   = document.getElementById('qf-shuffle-o').checked;
+  const dateOpen  = document.getElementById('qf-date-open').value  || null;
+  const dateClose = document.getElementById('qf-date-close').value || null;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  const questions = qqList.map(q=>({...q,opts:[...q.opts]}));
+  if (editQuizId) {
+    const qi = courses[i].quizzes.findIndex(x=>x.id===editQuizId);
+    if (qi>=0) courses[i].quizzes[qi] = {...courses[i].quizzes[qi], title, questions, timeLimit, maxAttempts, shuffleQuestions, shuffleOptions, dateOpen, dateClose};
+  } else {
+    const newQ = {id:'qz'+Date.now(),title,questions,timeLimit,maxAttempts,shuffleQuestions,shuffleOptions,dateOpen,dateClose};
+    courses[i].quizzes.push(newQ);
+    if (!courses[i].unifiedOrder) courses[i].unifiedOrder=getUnifiedOrder(courses[i]);
+    courses[i].unifiedOrder.push({type:'quiz',id:newQ.id});
+  }
+  edCourse=courses[i]; DB.set('courses',courses); closeModal('m-quiz'); renderEditorBody(); toast('Cuestionario guardado');
+}
+function delQuiz(id) {
+  if (!confirm('¿Eliminar este cuestionario?')) return;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  courses[i].quizzes=courses[i].quizzes.filter(q=>q.id!==id);
+  if (courses[i].unifiedOrder) courses[i].unifiedOrder=courses[i].unifiedOrder.filter(x=>x.id!==id);
+  if (courses[i].evalOrder) courses[i].evalOrder=courses[i].evalOrder.filter(x=>x.id!==id);
+  edCourse=courses[i]; DB.set('courses',courses); renderEditorBody(); toast('Cuestionario eliminado');
+}
+
+// Assignments
+let _editAssignId = null;
+function openAssignModal(aid) {
+  _editAssignId = aid || null;
+  if (aid) {
+    const a = (edCourse.assignments||[]).find(x=>x.id===aid);
+    if (a) {
+      document.getElementById('af-title').value = a.title||'';
+      document.getElementById('af-desc').value  = a.desc||'';
+      document.getElementById('af-due').value   = a.due||'';
+      document.getElementById('af-enforce').checked = !!a.enforceDue;
+    }
+  } else {
+    ['af-title','af-desc','af-due'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('af-enforce').checked = false;
+  }
+  document.getElementById('massign-title').textContent = _editAssignId ? 'Editar Tarea' : 'Crear Tarea';
+  openModal('m-assign');
+}
+function saveAssignment() {
+  const title=document.getElementById('af-title').value.trim(), desc=document.getElementById('af-desc').value.trim();
+  if (!title||!desc) { toast('Título e instrucciones son requeridos','err'); return; }
+  const due=document.getElementById('af-due').value;
+  const enforceDue=document.getElementById('af-enforce').checked;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  if (_editAssignId) {
+    const ai=courses[i].assignments.findIndex(a=>a.id===_editAssignId);
+    if (ai>=0) courses[i].assignments[ai]={...courses[i].assignments[ai], title, desc, due, enforceDue};
+    toast('Tarea actualizada');
+  } else {
+    const newA={id:'a'+Date.now(), title, desc, due, enforceDue, forceOpen:false};
+    courses[i].assignments.push(newA);
+    if (!courses[i].unifiedOrder) courses[i].unifiedOrder=getUnifiedOrder(courses[i]);
+    courses[i].unifiedOrder.push({type:'assignment',id:newA.id});
+    toast('Tarea creada');
+  }
+  _editAssignId=null;
+  edCourse=courses[i]; DB.set('courses',courses); closeModal('m-assign'); renderEditorBody();
+}
+function delAssign(id) {
+  if (!confirm('¿Eliminar esta tarea?')) return;
+  const courses=DB.get('courses')||[], i=courses.findIndex(c=>c.id===edCourse.id);
+  courses[i].assignments=courses[i].assignments.filter(a=>a.id!==id);
+  if (courses[i].unifiedOrder) courses[i].unifiedOrder=courses[i].unifiedOrder.filter(x=>x.id!==id);
+  if (courses[i].evalOrder) courses[i].evalOrder=courses[i].evalOrder.filter(x=>x.id!==id);
+  edCourse=courses[i]; DB.set('courses',courses); renderEditorBody(); toast('Tarea eliminada');
+}
+
+// ─── Date / lock helpers ───────────────────────────────────────
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function nowStr()   { return new Date().toISOString().slice(0,16).replace('T',' '); }
+
+function parseDateTime(val) {
+  if (!val) return null;
+  // Supports YYYY-MM-DD (old) and YYYY-MM-DDTHH:mm (new)
+  return new Date(val.includes('T') ? val : val + 'T00:00');
+}
+function parseDateTimeClose(val) {
+  if (!val) return null;
+  return new Date(val.includes('T') ? val : val + 'T23:59');
+}
+function formatDatetime(val) {
+  if (!val) return '';
+  if (val.includes('T')) return val.replace('T',' ');
+  return val;
+}
+
+function isQuizDateLocked(q) {
+  if (q.forceOpen) return false;
+  const now = new Date();
+  if (q.dateOpen  && now < parseDateTime(q.dateOpen))  return true;
+  if (q.dateClose && now > parseDateTimeClose(q.dateClose)) return true;
+  return false;
+}
+
+function isAssignLocked(a) {
+  if (a.forceOpen) return false;
+  if (!a.enforceDue || !a.due) return false;
+  return new Date() > parseDateTimeClose(a.due);
+}
+
+function toggleQuizForceOpen(cid, qid) {
+  const courses=DB.get('courses')||[], ci=courses.findIndex(c=>c.id===cid);
+  const qi=courses[ci].quizzes.findIndex(q=>q.id===qid);
+  courses[ci].quizzes[qi].forceOpen=!courses[ci].quizzes[qi].forceOpen;
+  edCourse=courses[ci]; DB.set('courses',courses); renderEditorBody();
+  toast(courses[ci].quizzes[qi].forceOpen?'Cuestionario habilitado manualmente':'Cuestionario vuelto a fechas');
+}
+
+function toggleAssignForceOpen(cid, aid) {
+  const courses=DB.get('courses')||[], ci=courses.findIndex(c=>c.id===cid);
+  const ai=courses[ci].assignments.findIndex(a=>a.id===aid);
+  courses[ci].assignments[ai].forceOpen=!courses[ci].assignments[ai].forceOpen;
+  edCourse=courses[ci]; DB.set('courses',courses); renderEditorBody();
+  toast(courses[ci].assignments[ai].forceOpen?'Tarea habilitada manualmente':'Tarea vuelto a fecha límite');
+}
+
+// ─── Teacher (Docente) ───────────────────────────────────────
+function nav_tcourses() { showView('v-tcourses'); renderTeacherCourses(); setNav(0); }
+
+function renderTeacherCourses() {
+  const courses=DB.get('courses')||[], enrolls=DB.get('enrolls')||[];
+  const myCourses=enrolls.filter(e=>e.sid===me.id).map(e=>courses.find(c=>c.id===e.cid)).filter(Boolean);
+  const grid=document.getElementById('tcourses-grid');
+  if (!myCourses.length) { grid.innerHTML='<div class="empty"><i class="fa fa-book"></i><p>No tienes cursos asignados.<br>El administrador debe inscribirte en los cursos.</p></div>'; return; }
+  grid.innerHTML=myCourses.map(c=>`
+    <div class="ccard" onclick="openEditor('${c.id}')">
+      <div class="ccard-emoji">${c.emoji||'📚'}</div>
+      <div class="ccard-title">${c.title}</div>
+      <div class="ccard-sub">${c.cat} · ${c.dur}h</div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <span class="badge b-blue"><i class="fa fa-book-open"></i> ${(c.materials||[]).filter(m=>m.type!=='section').length} materiales</span>
+        <span class="badge b-gray"><i class="fa fa-clipboard-list"></i> ${(c.quizzes||[]).length+(c.assignments||[]).length} eval.</span>
+      </div>
+    </div>`).join('');
+}
+
+// ─── Students (Admin) ─────────────────────────────────────────
+function renderStudentsTb() {
+  const users=(DB.get('users')||[]).filter(u=>u.role==='student'||u.role==='teacher');
+  const enrolls=DB.get('enrolls')||[];
+  const tb=document.getElementById('students-tb');
+  if (!users.length) { tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No hay usuarios registrados</td></tr>'; return; }
+  tb.innerHTML=users.map(s=>{
+    const isT=s.role==='teacher';
+    return `<tr>
+      <td><strong>${s.name}</strong><br><small style="color:var(--muted)">${s.email||''}</small></td>
+      <td><span class="badge ${isT?'b-blue':'b-gray'}">${isT?'Docente':'Estudiante'}</span></td>
+      <td>${s.username}</td>
+      <td><span class="badge b-blue">${s.accessCode||'—'}</span></td>
+      <td>${enrolls.filter(e=>e.sid===s.id).length}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        ${!isT?`<button class="btn btn-outline btn-sm" onclick="openStudentProgress('${s.id}')"><i class="fa fa-chart-line"></i> Progreso</button>`:''}
+        <button class="btn btn-outline btn-sm" onclick="openEditStudent('${s.id}')"><i class="fa fa-edit"></i></button>
+        <button class="btn btn-danger btn-sm" onclick="delStudent('${s.id}')"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openStudentProgress(sid) {
+  const users=DB.get('users')||[], courses=DB.get('courses')||[], enrolls=DB.get('enrolls')||[];
+  const st=users.find(u=>u.id===sid);
+  if (!st) return;
+  document.getElementById('msp-title').textContent='Progreso: '+st.name;
+  const myEnrolls=enrolls.filter(e=>e.sid===sid);
+  const myCourses=myEnrolls.map(e=>courses.find(c=>c.id===e.cid)).filter(Boolean);
+  if (!myCourses.length) {
+    document.getElementById('msp-body').innerHTML='<div class="empty"><i class="fa fa-graduation-cap"></i><p>Sin cursos inscritos</p></div>';
+  } else {
+    const views=DB.get('views')||[], subs=DB.get('subs')||[];
+    document.getElementById('msp-body').innerHTML=myCourses.map(c=>{
+      const pct=getCourseProgress(sid,c.id);
+      const color=pct<31?'var(--primary)':pct<61?'#f39c12':'var(--success)';
+      const matTotal=c.materials.length, matDone=new Set(views.filter(v=>v.sid===sid&&v.cid===c.id).map(v=>v.mid)).size;
+      const qTotal=c.quizzes.length, qDone=new Set(subs.filter(s=>s.sid===sid&&s.cid===c.id&&s.type==='quiz').map(s=>s.qid)).size;
+      const aTotal=c.assignments.length, aDone=new Set(subs.filter(s=>s.sid===sid&&s.cid===c.id&&s.type==='assignment').map(s=>s.aid)).size;
+      return `<div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:15px;font-weight:600">${c.emoji||'📚'} ${c.title}</div>
+          <span class="badge" style="background:${color}22;color:${color};font-size:13px">${pct}%</span>
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px">
+          📄 Materiales: ${matDone}/${matTotal} &nbsp;|&nbsp; 📝 Cuestionarios: ${qDone}/${qTotal} &nbsp;|&nbsp; 📋 Tareas: ${aDone}/${aTotal}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  openModal('m-student-progress');
+}
+
+let _newUserRole='student';
+function openStudentModal(role) {
+  _newUserRole=role||'student';
+  ['sf-name','sf-email','sf-user','sf-pass'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('sf-code').value='INNOVA-'+Date.now().toString().slice(-6);
+  document.querySelector('#m-student .mhd-title').textContent=_newUserRole==='teacher'?'Agregar Docente':'Agregar Estudiante';
+  openModal('m-student');
+}
+function saveStudent() {
+  const name=document.getElementById('sf-name').value.trim();
+  const username=document.getElementById('sf-user').value.trim();
+  const password=document.getElementById('sf-pass').value.trim();
+  if (!name||!username||!password) { toast('Nombre, usuario y contraseña son requeridos','err'); return; }
+  const users=DB.get('users')||[];
+  if (users.some(u=>u.username===username)) { toast('Ese usuario ya existe','err'); return; }
+  users.push({id:'u'+Date.now(),name,username,password,role:_newUserRole,email:document.getElementById('sf-email').value,accessCode:document.getElementById('sf-code').value});
+  DB.set('users',users); closeModal('m-student'); renderStudentsTb(); toast(_newUserRole==='teacher'?'Docente registrado':'Estudiante registrado');
+}
+function filterStudents(q) {
+  const qLow=q.toLowerCase();
+  document.querySelectorAll('#students-tb tr').forEach(r=>{
+    r.style.display=r.textContent.toLowerCase().includes(qLow)?'':'none';
+  });
+}
+function delStudent(id) {
+  if (!confirm('¿Eliminar este estudiante?')) return;
+  DB.set('users',(DB.get('users')||[]).filter(u=>u.id!==id));
+  DB.set('enrolls',(DB.get('enrolls')||[]).filter(e=>e.sid!==id));
+  renderStudentsTb(); toast('Estudiante eliminado');
+}
+
+let editStudentId = null;
+function openEditStudent(id) {
+  const u=(DB.get('users')||[]).find(x=>x.id===id);
+  if (!u) return;
+  editStudentId = id;
+  document.getElementById('edf-name').value = u.name||'';
+  document.getElementById('edf-email').value = u.email||'';
+  document.getElementById('edf-user').value = u.username||'';
+  document.getElementById('edf-pass').value = u.password||'';
+  document.getElementById('edf-code').value = u.accessCode||'';
+  openModal('m-edit-student');
+}
+function saveEditStudent() {
+  const name=document.getElementById('edf-name').value.trim();
+  const username=document.getElementById('edf-user').value.trim();
+  const password=document.getElementById('edf-pass').value.trim();
+  if (!name||!username||!password) { toast('Nombre, usuario y contraseña son requeridos','err'); return; }
+  const users=DB.get('users')||[];
+  const idx=users.findIndex(u=>u.id===editStudentId);
+  if (idx<0) return;
+  if (users.some((u,i)=>u.username===username&&i!==idx)) { toast('Ese usuario ya existe','err'); return; }
+  users[idx]={...users[idx],name,username,password,email:document.getElementById('edf-email').value.trim(),accessCode:document.getElementById('edf-code').value.trim()};
+  DB.set('users',users); closeModal('m-edit-student'); renderStudentsTb(); toast('Estudiante actualizado');
+}
+
+// ─── Admin Grades ─────────────────────────────────────────────
+let agradesTabActive = 'quizzes';
+
+function agradesTab(tab, el) {
+  agradesTabActive = tab;
+  document.querySelectorAll('#agrades-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderAdminGrades();
+}
+
+function delGrade(subId) {
+  if (!confirm('¿Eliminar esta calificación? Esta acción no se puede deshacer.')) return;
+  DB.set('subs',(DB.get('subs')||[]).filter(s=>s.id!==subId));
+  renderAdminGrades(); toast('Calificación eliminada');
+}
+
+function renderAdminGrades() {
+  const users=DB.get('users')||[], courses=DB.get('courses')||[];
+  const body=document.getElementById('agrades-body');
+  const cfg=getGradeConfig();
+  const pass=cfg.passThreshold;
+
+  // Docentes solo ven calificaciones de sus cursos asignados
+  let allowedCids=null;
+  if (me.role==='teacher') {
+    const enrolls=DB.get('enrolls')||[];
+    allowedCids=new Set(enrolls.filter(e=>e.sid===me.id).map(e=>e.cid));
+  }
+
+  if (agradesTabActive==='quizzes') {
+    let allSubs=(DB.get('subs')||[]).filter(s=>s.type==='quiz');
+    if (allowedCids) allSubs=allSubs.filter(s=>allowedCids.has(s.cid));
+    if (!allSubs.length) {
+      body.innerHTML=`<div class="card"><div style="text-align:center;padding:32px;color:var(--muted)">No hay calificaciones aún</div></div>`;
+      return;
+    }
+    // Agrupar por estudiante + cuestionario
+    const grouped={};
+    allSubs.forEach(s=>{
+      const key=`${s.sid}||${s.qid||s.qtitle}`;
+      if (!grouped[key]) grouped[key]={sid:s.sid,cid:s.cid,qtitle:s.qtitle,attempts:[]};
+      grouped[key].attempts.push(s);
+    });
+    // Ordenar intentos por fecha
+    Object.values(grouped).forEach(g=>g.attempts.sort((a,b)=>new Date(a.date)-new Date(b.date)));
+    // Calcular máximo de intentos en todos los grupos
+    const maxAtt=Math.max(...Object.values(grouped).map(g=>g.attempts.length),1);
+    // Encabezados de intentos
+    let attHdr='';
+    for(let i=1;i<=maxAtt;i++) attHdr+=`<th>Intento ${i}</th>`;
+    // Filas
+    const rows=Object.values(grouped).map(g=>{
+      const st=users.find(u=>u.id===g.sid), c=courses.find(x=>x.id===g.cid);
+      const best=g.attempts.reduce((b,s)=>s.score>b.score?s:b,g.attempts[0]);
+      const bestPct=Math.round((best.score/best.max)*100), approved=bestPct>=pass;
+      let attCells='';
+      for(let i=0;i<maxAtt;i++){
+        if(g.attempts[i]){
+          const s=g.attempts[i], pct=Math.round((s.score/s.max)*100), ok=pct>=pass;
+          attCells+=`<td style="white-space:nowrap">
+            <span class="badge ${ok?'b-green':'b-orange'}" style="font-size:11px">${s.score}/${s.max} (${pct}%)</span>
+            <button class="btn btn-danger btn-sm" style="padding:2px 6px;margin-left:3px" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
+          </td>`;
+        } else {
+          attCells+=`<td style="color:var(--muted);font-size:12px;text-align:center">—</td>`;
+        }
+      }
+      return `<tr>
+        <td><strong>${st?st.name:'—'}</strong></td>
+        <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;font-size:13px">${c?c.title:'—'}</td>
+        <td style="font-size:13px">${g.qtitle}</td>
+        ${attCells}
+        <td><span class="badge ${approved?'b-green':'b-red'}">${bestPct}% — ${approved?'Aprobado':'Reprobado'}</span></td>
+        <td>${st?`<button class="btn btn-outline btn-sm" onclick="exportStudentPDF('${st.id}')"><i class="fa fa-file-pdf"></i> Reporte</button>`:''}</td>
+      </tr>`;
+    });
+    body.innerHTML=`<div class="card" style="overflow-x:auto"><table>
+      <thead><tr><th>Estudiante</th><th>Curso</th><th>Cuestionario</th>${attHdr}<th>Mejor</th><th></th></tr></thead>
+      <tbody>${rows.join('')}</tbody>
+    </table></div>`;
+
+  } else {
+    let subs=(DB.get('subs')||[]).filter(s=>s.type==='assignment');
+    if (allowedCids) subs=subs.filter(s=>allowedCids.has(s.cid));
+    body.innerHTML=`<div class="card"><table>
+      <thead><tr><th>Estudiante</th><th>Curso</th><th>Tarea</th><th>Respuesta</th><th>Estado</th><th>Nota</th><th>Acciones</th></tr></thead>
+      <tbody>${subs.length ? [...subs].reverse().map(s=>{
+        const st=users.find(u=>u.id===s.sid), c=courses.find(x=>x.id===s.cid);
+        const graded=s.graded||false;
+        const preview=(s.txt||'').length>80?(s.txt||'').substring(0,80)+'...':s.txt||'';
+        const approved=graded&&Number(s.grade)>=pass;
+        return `<tr>
+          <td>${st?st.name:'—'}</td>
+          <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${c?c.title:'—'}</td>
+          <td>${s.atitle||'—'}</td>
+          <td style="max-width:200px;font-size:13px;color:#555">${preview}</td>
+          <td><span class="badge ${graded?'b-green':'b-orange'}">${graded?'Calificado':'Pendiente'}</span></td>
+          <td>${graded?`<strong>${s.grade}%</strong> <span class="badge ${approved?'b-green':'b-red'}" style="font-size:10px">${approved?'Aprobado':'Reprobado'}</span>`:'—'}</td>
+          <td style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="openGradeAssignModal('${s.id}')"><i class="fa fa-${graded?'eye':'check'}"></i> ${graded?'Ver/Editar':'Calificar'}</button>
+            <button class="btn btn-danger btn-sm" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
+          </td></tr>`;
+      }).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No hay tareas entregadas aún</td></tr>'}</tbody>
+    </table></div>`;
+  }
+}
+
+// ─── Grade Assignment Modal ────────────────────────────────────
+let gradingSubId = null;
+
+function openGradeAssignModal(subId) {
+  gradingSubId = subId;
+  const subs=DB.get('subs')||[], users=DB.get('users')||[];
+  const s=subs.find(x=>x.id===subId);
+  if (!s) return;
+  const st=users.find(u=>u.id===s.sid);
+  document.getElementById('mga-title').textContent=(s.graded?'Ver/Editar Calificación':'Calificar Tarea')+': '+s.atitle;
+  document.getElementById('mga-meta').textContent='Estudiante: '+(st?st.name:'—')+'  |  Entregada: '+s.date;
+  document.getElementById('mga-txt').value=s.txt||'';
+  document.getElementById('mga-grade').value=s.graded?(s.grade||''):'';
+  document.getElementById('mga-feedback').value=s.feedback||'';
+  openModal('m-grade-assign');
+}
+
+function saveAssignGrade() {
+  const gradeVal=parseInt(document.getElementById('mga-grade').value);
+  if (isNaN(gradeVal)||gradeVal<0||gradeVal>100) { toast('Ingresa una nota entre 0 y 100','err'); return; }
+  const feedback=document.getElementById('mga-feedback').value.trim();
+  const subs=DB.get('subs')||[];
+  const idx=subs.findIndex(x=>x.id===gradingSubId);
+  if (idx<0) { toast('Entrega no encontrada','err'); return; }
+  subs[idx].grade=gradeVal;
+  subs[idx].feedback=feedback;
+  subs[idx].graded=true;
+  subs[idx].gradedDate=new Date().toLocaleDateString('es-CR');
+  DB.set('subs',subs);
+  closeModal('m-grade-assign');
+  renderAdminGrades();
+  toast('Calificación guardada');
+}
+
+// ─── Student Dashboard ────────────────────────────────────────
+function renderStudentDash() {
+  document.getElementById('s-welcome').textContent = `Hola, ${me.name.split(' ')[0]} 👋`;
+  const enrolls=(DB.get('enrolls')||[]).filter(e=>e.sid===me.id);
+  const courses=DB.get('courses')||[];
+  const my = enrolls.map(e=>courses.find(c=>c.id===e.cid)).filter(Boolean);
+  const grid=document.getElementById('sdash-grid');
+  if (!my.length) { grid.innerHTML='<div class="empty"><i class="fa fa-graduation-cap"></i><p>Aún no estás inscrito en ningún curso.<br>Contacta a tu instructor.</p></div>'; return; }
+  grid.innerHTML=my.map((c,i)=>{
+    const pct=getCourseProgress(me.id,c.id);
+    const color=pct<31?'#e74c3c':pct<61?'#f39c12':'#27ae60';
+    return `<div class="cc" onclick="openStudentCourse('${c.id}')" style="cursor:pointer">
+      <div class="cc-head" style="background:${COLORS[i%COLORS.length]}">${c.emoji||'📚'}</div>
+      <div class="cc-body">
+        <div class="cc-title">${c.title}</div>
+        <div class="cc-desc">${c.desc}</div>
+        <span class="badge b-orange">${c.cat}</span>
+        <div style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px"><span>Progreso</span><span>${pct}%</span></div>
+          <div class="pbar"><div class="pfill" style="width:${pct}%;background:${color}"></div></div>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+
+// ─── Student Course Detail ────────────────────────────────────
+let sCourse=null;
+
+function renderCourseProgressBar(cid) {
+  const c=(DB.get('courses')||[]).find(x=>x.id===cid);
+  if (!c) return '';
+  const pct=getCourseProgress(me.id,cid);
+  const color=pct<31?'#e74c3c':pct<61?'#f39c12':'#27ae60';
+  const subs=DB.get('subs')||[], views=DB.get('views')||[];
+  const matTotal=c.materials.length, matDone=new Set(views.filter(v=>v.sid===me.id&&v.cid===cid).map(v=>v.mid)).size;
+  const qTotal=c.quizzes.length, qDone=new Set(subs.filter(s=>s.sid===me.id&&s.cid===cid&&s.type==='quiz').map(s=>s.qid)).size;
+  const aTotal=c.assignments.length, aDone=new Set(subs.filter(s=>s.sid===me.id&&s.cid===cid&&s.type==='assignment').map(s=>s.aid)).size;
+  return `<div class="prog-detail">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:600">Progreso del curso</span>
+      <span style="font-size:18px;font-weight:800;color:${color}">${pct}%</span>
+    </div>
+    <div class="prog-detail-bar"><div class="pbar"><div class="pfill" style="width:${pct}%;background:${color}"></div></div></div>
+    <div class="prog-breakdown">
+      <span>📄 Materiales: ${matDone}/${matTotal}</span>
+      <span>📝 Cuestionarios: ${qDone}/${qTotal}</span>
+      <span>📋 Tareas: ${aDone}/${aTotal}</span>
+    </div>
+  </div>`;
+}
+
+let sActiveItem = null;
+
+function openStudentCourse(cid) {
+  sCourse=(DB.get('courses')||[]).find(c=>c.id===cid);
+  document.getElementById('sc-title').textContent=sCourse.title;
+  document.getElementById('sc-sub').textContent=sCourse.cat+' · '+sCourse.dur+'h';
+  sActiveItem={type:'overview'};
+  showView('v-scourse');
+  renderSCNav();
+  renderSCContent();
+}
+
+function selectSCItem(item) {
+  sActiveItem=item;
+  renderSCNav();
+  renderSCContent();
+}
+
+function renderSCNav() {
+  const c=sCourse, el=document.getElementById('sc-nav');
+  const subs=DB.get('subs')||[];
+  const viewedMids=new Set((DB.get('views')||[]).filter(v=>v.sid===me.id&&v.cid===c.id).map(v=>v.mid));
+  const _cfg=getGradeConfig(), _pass=_cfg.passThreshold;
+
+  // Overview
+  const ovActive=sActiveItem?.type==='overview';
+  let html=`<div class="sc-nav-item${ovActive?' active':''}" onclick="selectSCItem({type:'overview'})">
+    <i class="fa fa-home" style="font-size:11px;opacity:.65"></i>
+    <span style="flex:1">Resumen del Curso</span>
+  </div>`;
+
+  // Iterate unified order directly
+  const uOrder=getUnifiedOrder(c);
+  uOrder.forEach(item=>{
+    if (item.type==='material') {
+      const m=(c.materials||[]).find(x=>x.id===item.id); if(!m) return;
+      if (m.type==='section') {
+        const bg=m.color||'#3498db';
+        html+=`<div class="sc-nav-sec-hdr" style="color:${bg};background:${bg}15;border-left:3px solid ${bg}">${m.title}</div>`;
+      } else {
+        const active=sActiveItem?.type==='material'&&sActiveItem?.id===m.id;
+        const viewed=viewedMids.has(m.id);
+        const icMap={video:'fa-play-circle',pdf:'fa-file-pdf',html:'fa-code',text:'fa-align-left'};
+        const ic=icMap[m.type]||'fa-file';
+        html+=`<div class="sc-nav-item${active?' active':''}" onclick="selectSCItem({type:'material',id:'${m.id}'})">
+          <i class="fa ${ic}" style="font-size:11px;opacity:.6"></i>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.title}">${m.title}</span>
+          ${viewed?'<i class="fa fa-check-circle" style="color:var(--success);font-size:11px;flex-shrink:0"></i>':''}
+        </div>`;
+      }
+    } else if (item.type==='evalsec') {
+      const s=(c.evalSections||[]).find(x=>x.id===item.id); if(!s) return;
+      const bg=s.color||'#3498db';
+      html+=`<div class="sc-nav-sec-hdr" style="color:${bg};background:${bg}15;border-left:3px solid ${bg}">${s.title}</div>`;
+    } else if (item.type==='quiz') {
+      const q=(c.quizzes||[]).find(x=>x.id===item.id); if(!q) return;
+      const myAtt=subs.filter(s=>s.sid===me.id&&s.qid===q.id&&s.type==='quiz');
+      const best=myAtt.length?myAtt.reduce((b,s)=>(!b||s.score>b.score)?s:b,null):null;
+      const bestPct=best?Math.round((best.score/best.max)*100):null;
+      const active=sActiveItem?.type==='quiz'&&sActiveItem?.id===q.id;
+      html+=`<div class="sc-nav-item${active?' active':''}" onclick="selectSCItem({type:'quiz',id:'${q.id}'})">
+        <i class="fa fa-question-circle" style="font-size:11px;opacity:.6"></i>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${q.title}">${q.title}</span>
+        ${bestPct!==null?`<span style="font-size:10px;font-weight:700;color:${bestPct>=_pass?'var(--success)':'var(--primary)'};flex-shrink:0">${bestPct}%</span>`:''}
+      </div>`;
+    } else if (item.type==='assignment') {
+      const a=(c.assignments||[]).find(x=>x.id===item.id); if(!a) return;
+      const sub=subs.find(s=>s.sid===me.id&&s.aid===a.id);
+      const active=sActiveItem?.type==='assignment'&&sActiveItem?.id===a.id;
+      html+=`<div class="sc-nav-item${active?' active':''}" onclick="selectSCItem({type:'assignment',id:'${a.id}'})">
+        <i class="fa fa-tasks" style="font-size:11px;opacity:.6"></i>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.title}">${a.title}</span>
+        ${sub?'<i class="fa fa-check-circle" style="color:var(--success);font-size:11px;flex-shrink:0"></i>':''}
+      </div>`;
+    }
+  });
+
+  el.innerHTML=html;
+}
+
+function renderSCContent() {
+  const el=document.getElementById('sc-body'), c=sCourse, type=sActiveItem?.type;
+  if (!type||type==='overview') { renderSCOverview(el,c); }
+  else if (type==='material') { const m=(c.materials||[]).find(x=>x.id===sActiveItem.id); m?renderSCMaterial(el,c,m):(el.innerHTML=''); }
+  else if (type==='quiz')     { const q=(c.quizzes||[]).find(x=>x.id===sActiveItem.id);   q?renderSCQuiz(el,c,q):(el.innerHTML=''); }
+  else if (type==='assignment'){ const a=(c.assignments||[]).find(x=>x.id===sActiveItem.id); a?renderSCAssign(el,c,a):(el.innerHTML=''); }
+}
+
+function renderSCOverview(el,c) {
+  const subs=DB.get('subs')||[];
+  const viewedMids=new Set((DB.get('views')||[]).filter(v=>v.sid===me.id&&v.cid===c.id).map(v=>v.mid));
+  const cOrder=getContentOrder(c), eOrder=getEvalOrder(c);
+  const mats=cOrder.filter(i=>{const m=(c.materials||[]).find(x=>x.id===i.id);return m&&m.type!=='section';});
+  const viewedCount=mats.filter(i=>viewedMids.has(i.id)).length;
+  const totalMats=mats.length;
+  const progPct=totalMats?Math.round((viewedCount/totalMats)*100):0;
+  const _cfg=getGradeConfig(), _pass=_cfg.passThreshold;
+  const grade=calcStudentCourseGrade(c,me.id,subs);
+  el.innerHTML=`
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title" style="margin-bottom:4px">${c.title}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:18px">${c.cat} &middot; ${c.dur}h</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
+        <div style="background:#f0f9f0;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:26px;font-weight:800;color:var(--success)">${progPct}%</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Contenido visto</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">${viewedCount}/${totalMats} materiales</div>
+        </div>
+        <div style="background:#f0f4ff;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:26px;font-weight:800;color:var(--primary)">${grade!==null?grade+'%':'—'}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">Calificación</div>
+          ${grade!==null?`<div style="font-size:11px;color:${grade>=_pass?'var(--success)':'#e74c3c'};margin-top:2px">${grade>=_pass?'Aprobado':'En progreso'}</div>`:'<div style="font-size:11px;color:#aaa;margin-top:2px">Sin actividad aún</div>'}
+        </div>
+      </div>
+      ${progPct<100?`<div class="pbar" style="margin-top:14px"><div class="pfill" style="width:${progPct}%;background:var(--success)"></div></div>`:''}
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:10px"><i class="fa fa-info-circle" style="color:var(--primary)"></i> Acerca del Curso</div>
+      <div style="font-size:14px;color:#555;line-height:1.8">${c.desc||'Sin descripción disponible.'}</div>
+      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px">
+        <span class="badge b-blue"><i class="fa fa-folder"></i> ${c.cat}</span>
+        <span class="badge b-gray"><i class="fa fa-clock"></i> ${c.dur}h</span>
+        <span class="badge b-gray"><i class="fa fa-book-open"></i> ${totalMats} materiales</span>
+        <span class="badge b-gray"><i class="fa fa-clipboard-list"></i> ${eOrder.filter(i=>i.type!=='evalsec').length} evaluaciones</span>
+      </div>
+    </div>`;
+}
+
+function renderSCMaterial(el,c,m) {
+  trackMaterialView(me.id,c.id,m.id);
+  if (m.type==='video') {
+    const vid=ytId(m.url);
+    el.innerHTML=`<div class="card">
+      <div class="card-title" style="margin-bottom:14px"><i class="fa fa-play-circle" style="color:var(--success)"></i> ${m.title}</div>
+      ${vid?`<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe></div>`
+           :`<a href="${m.url}" target="_blank" class="btn btn-success"><i class="fa fa-external-link-alt"></i> Ver video</a>`}
+    </div>`;
+  } else if (m.type==='pdf') {
+    let embedUrl=m.url; const dm=m.url.match(/\/file\/d\/([^/]+)/);
+    if (dm) embedUrl=`https://drive.google.com/file/d/${dm[1]}/preview`;
+    el.innerHTML=`<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="card-title"><i class="fa fa-file-pdf" style="color:var(--primary)"></i> ${m.title}</div>
+        <a href="${m.url}" target="_blank" class="btn btn-primary btn-sm"><i class="fa fa-external-link-alt"></i> Abrir</a>
+      </div>
+      <iframe src="${embedUrl}" style="width:100%;height:520px;border:none;border-radius:8px;background:#f5f5f5" allowfullscreen></iframe>
+    </div>`;
+  } else if (m.type==='html') {
+    el.innerHTML=`<div class="card">
+      <div class="card-title" style="margin-bottom:14px"><i class="fa fa-code" style="color:var(--info)"></i> ${m.title}</div>
+      <iframe srcdoc="${(m.html||'').replace(/"/g,'&quot;')}" style="width:100%;min-height:400px;border:none;border-radius:8px;background:#fff" sandbox="allow-scripts"></iframe>
+    </div>`;
+  } else {
+    el.innerHTML=`<div class="card">
+      <div class="card-title" style="margin-bottom:12px"><i class="fa fa-align-left" style="color:var(--info)"></i> ${m.title}</div>
+      <p style="font-size:14px;line-height:1.9;white-space:pre-wrap;color:#444">${m.txt}</p>
+    </div>`;
+  }
+  renderSCNav();
+}
+
+function renderSCQuiz(el,c,q) {
+  const subs=DB.get('subs')||[];
+  const _cfg=getGradeConfig(), _pass=_cfg.passThreshold;
+  const myAtt=subs.filter(s=>s.sid===me.id&&s.qid===q.id&&s.type==='quiz');
+  const maxAtt=q.maxAttempts||1, attUsed=myAtt.length;
+  const best=myAtt.length?myAtt.reduce((b,s)=>(!b||s.score>b.score)?s:b,null):null;
+  const bestPct=best?Math.round((best.score/best.max)*100):null;
+  const limitReached=attUsed>=maxAtt;
+  const dateLocked=isQuizDateLocked(q);
+  let lockMsg='';
+  if (dateLocked) {
+    if (q.dateOpen&&new Date()<parseDateTime(q.dateOpen))
+      lockMsg=`<div style="margin-top:12px;padding:12px;background:#fde8e8;border-radius:8px;font-size:13px;color:#721c24"><i class="fa fa-lock"></i> Disponible a partir del <strong>${formatDatetime(q.dateOpen)}</strong></div>`;
+    else
+      lockMsg=`<div style="margin-top:12px;padding:12px;background:#fde8e8;border-radius:8px;font-size:13px;color:#721c24"><i class="fa fa-lock"></i> Este cuestionario cerró el <strong>${formatDatetime(q.dateClose)}</strong></div>`;
+  }
+  el.innerHTML=`<div class="card">
+    <div class="card-hd" style="margin-bottom:12px">
+      <div>
+        <div class="card-title" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">
+          <i class="fa fa-question-circle" style="color:var(--primary)"></i> ${q.title}
+          ${maxAtt>1?`<span class="attempt-badge"><i class="fa fa-redo"></i> ${attUsed}/${maxAtt} intentos</span>`:''}
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">
+          ${q.questions.length} preguntas &middot; ${q.questions.reduce((a,b)=>a+b.pts,0)} pts
+          ${q.timeLimit>0?`&middot; <i class="fa fa-clock"></i> ${q.timeLimit} min`:''}
+          ${q.dateOpen?`&middot; <i class="fa fa-calendar-check"></i> Abre: ${formatDatetime(q.dateOpen)}`:''}
+          ${q.dateClose?`&middot; <i class="fa fa-calendar-times"></i> Cierra: ${formatDatetime(q.dateClose)}`:''}
+        </div>
+      </div>
+      ${dateLocked?`<span class="badge b-red"><i class="fa fa-lock"></i> No disponible</span>`
+        :limitReached?`<span class="badge b-red"><i class="fa fa-lock"></i> Límite alcanzado</span>`
+        :`<button class="btn btn-primary" onclick="startQuiz('${q.id}')"><i class="fa fa-play"></i> ${attUsed>0?'Intentar de nuevo':'Iniciar'}</button>`}
+    </div>
+    ${bestPct!==null?`<div class="pbar"><div class="pfill" style="width:${bestPct}%;background:${bestPct>=_pass?'var(--success)':'var(--primary)'}"></div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Mejor puntaje: <strong style="color:${bestPct>=_pass?'var(--success)':'var(--primary)'}">${bestPct}%</strong></div>`:''}
+    ${lockMsg}
+    ${!dateLocked&&limitReached?`<div style="margin-top:12px;padding:12px;background:#fde8e8;border-radius:8px;font-size:13px;color:#721c24"><i class="fa fa-info-circle"></i> Límite alcanzado (${attUsed}/${maxAtt}). Tu mejor calificación: <strong>${bestPct!==null?bestPct+'%':'—'}</strong></div>`:''}
+  </div>`;
+}
+
+function renderSCAssign(el,c,a) {
+  const subs=DB.get('subs')||[];
+  const sub=subs.find(s=>s.sid===me.id&&s.aid===a.id);
+  const dueLocked=isAssignLocked(a);
+  const overdue=a.due&&new Date()>parseDateTimeClose(a.due);
+  const dueBadge=a.due?(overdue
+    ?`<div style="font-size:13px;color:#e74c3c"><i class="fa fa-calendar-times"></i> Venció: ${formatDatetime(a.due)}</div>`
+    :`<div style="font-size:13px;color:var(--muted)"><i class="fa fa-calendar-check"></i> Límite: ${formatDatetime(a.due)}</div>`):'';
+  el.innerHTML=`<div class="card">
+    <div class="card-hd" style="margin-bottom:12px">
+      <div><div class="card-title"><i class="fa fa-tasks" style="color:var(--primary)"></i> ${a.title}</div>${dueBadge}</div>
+      <span class="badge ${sub?'b-green':dueLocked?'b-red':'b-gray'}">${sub?'Entregada':dueLocked?'Cerrada':'Pendiente'}</span>
+    </div>
+    <p style="font-size:14px;color:#555;line-height:1.7;margin:0 0 14px">${a.desc}</p>
+    ${sub
+      ?`<div style="background:#d4edda;border-radius:9px;padding:12px;font-size:13px;color:#155724;margin-bottom:8px"><i class="fa fa-check-circle"></i> Entregada el ${sub.date}</div>
+        ${sub.graded?`<div style="background:#d0e8f5;border-radius:9px;padding:12px;font-size:13px;color:#155169"><strong><i class="fa fa-star"></i> Calificación: ${sub.grade}/100</strong>${sub.feedback?`<div style="margin-top:6px;color:#333">${sub.feedback}</div>`:''}</div>`:'<div style="font-size:12px;color:var(--muted);margin-top:4px"><i class="fa fa-clock"></i> Pendiente de revisión por el instructor</div>'}`
+      :dueLocked
+        ?`<div style="padding:12px;background:#fde8e8;border-radius:8px;font-size:13px;color:#721c24"><i class="fa fa-lock"></i> Entregas cerradas (venció el ${formatDatetime(a.due)}). Contacta al instructor.</div>`
+        :`<textarea id="atxt-${a.id}" placeholder="Escribe tu respuesta o comentario..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;min-height:120px;font-family:inherit;font-size:14px;resize:vertical"></textarea>
+          <button class="btn btn-primary" style="margin-top:10px" onclick="submitAssign('${a.id}','${a.title.replace(/'/g,"\\'")}')"><i class="fa fa-paper-plane"></i> Entregar Tarea</button>`}
+  </div>`;
+}
+
+function submitAssign(aid, atitle) {
+  const a=(sCourse.assignments||[]).find(x=>x.id===aid);
+  if (a && isAssignLocked(a)) { toast('Las entregas están cerradas para esta tarea','err'); return; }
+  const txt=document.getElementById('atxt-'+aid)?.value.trim()||'';
+  const subs=DB.get('subs')||[];
+  subs.push({id:'s'+Date.now(),sid:me.id,cid:sCourse.id,aid,atitle,type:'assignment',txt,date:new Date().toLocaleDateString('es-CR')});
+  DB.set('subs',subs); renderSCContent(); renderSCNav(); toast('¡Tarea entregada!');
+}
+
+// ─── Quiz Taking ──────────────────────────────────────────────
+let cQuiz=null, qAnswers={}, quizTimer=null, quizRenderedQuestions=[];
+
+// Fisher-Yates shuffle (returns new array)
+function shuffleArray(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function clearQuizTimer() {
+  if (quizTimer) { clearInterval(quizTimer); quizTimer=null; }
+  const el=document.getElementById('quiz-timer-el');
+  if (el) el.remove();
+}
+
+function startQuizTimer(minutes) {
+  clearQuizTimer();
+  let remaining = minutes * 60;
+  const timerEl=document.createElement('div');
+  timerEl.id='quiz-timer-el';
+  timerEl.className='quiz-timer timer-green';
+  document.body.appendChild(timerEl);
+
+  function updateDisplay() {
+    const m=Math.floor(remaining/60), s=remaining%60;
+    const mm=String(m).padStart(2,'0'), ss=String(s).padStart(2,'0');
+    timerEl.innerHTML=`⏱️ ${mm}:${ss}`;
+    timerEl.className='quiz-timer ' + (remaining>300 ? 'timer-green' : remaining>60 ? 'timer-orange' : 'timer-red');
+  }
+
+  updateDisplay();
+  quizTimer=setInterval(()=>{
+    remaining--;
+    updateDisplay();
+    if (remaining<=0) {
+      clearInterval(quizTimer); quizTimer=null;
+      toast('⏱️ ¡Tiempo agotado! Enviando cuestionario...');
+      setTimeout(()=>submitQuiz(true), 900);
+    }
+  },1000);
+}
+
+function startQuiz(qid) {
+  const c=(DB.get('courses')||[]).find(x=>x.id===sCourse.id);
+  cQuiz=c.quizzes.find(q=>q.id===qid);
+  qAnswers={};
+
+  // Check date lock
+  if (isQuizDateLocked(cQuiz)) { toast('Este cuestionario no está disponible en este momento','err'); showView('v-scourse'); renderSCNav();renderSCContent(); return; }
+
+  // Check attempt limit
+  const subs=DB.get('subs')||[];
+  const myAttempts=subs.filter(s=>s.sid===me.id&&s.qid===qid&&s.type==='quiz');
+  const maxAttempts=cQuiz.maxAttempts||1;
+  if (myAttempts.length>=maxAttempts) {
+    showView('v-scourse'); renderSCNav();renderSCContent(); return;
+  }
+
+  // Prepare (possibly shuffled) questions for this attempt
+  let questions=[...cQuiz.questions];
+  if (cQuiz.shuffleQuestions) questions=shuffleArray(questions);
+  if (cQuiz.shuffleOptions) {
+    questions=questions.map(q=>{
+      const correctText=q.opts[q.correct];
+      const shuffledOpts=shuffleArray(q.opts.filter(o=>o.trim()));
+      const newCorrect=shuffledOpts.indexOf(correctText);
+      return {...q, opts:shuffledOpts, correct:newCorrect};
+    });
+  }
+  quizRenderedQuestions=questions;
+
+  const attemptNum=myAttempts.length+1;
+  document.getElementById('quiz-name').textContent=cQuiz.title;
+  document.getElementById('quiz-info').textContent=sCourse.title+' · '+questions.length+' preguntas'+(maxAttempts>1?` · Intento ${attemptNum} de ${maxAttempts}`:'');
+  document.getElementById('quiz-back').onclick=()=>{clearQuizTimer();showView('v-scourse');renderSCNav();renderSCContent();};
+  showView('v-squiz');
+  renderQuizTake(attemptNum, maxAttempts, myAttempts);
+  if ((cQuiz.timeLimit||0)>0) startQuizTimer(cQuiz.timeLimit);
+}
+
+function renderQuizTake(attemptNum, maxAttempts, prevAttempts) {
+  const questions=quizRenderedQuestions;
+  const bestPrev=prevAttempts&&prevAttempts.length
+    ? Math.round(prevAttempts.reduce((best,s)=>(!best||s.score>best.score)?s:best,null).score / prevAttempts.reduce((best,s)=>(!best||s.score>best.score)?s:best,null).max*100)
+    : null;
+
+  const attemptsInfo = (maxAttempts>1||bestPrev!==null) ? `
+    <div style="margin-bottom:14px;padding:10px 14px;background:var(--light);border-radius:9px;font-size:13px;display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      ${maxAttempts>1?`<span><i class="fa fa-redo" style="color:var(--info)"></i> <strong>Intento ${attemptNum} de ${maxAttempts}</strong></span>`:''}
+      ${bestPrev!==null?`<span><i class="fa fa-star" style="color:#f39c12"></i> Mejor puntaje anterior: <strong>${bestPrev}%</strong></span>`:''}
+    </div>` : '';
+
+  document.getElementById('quiz-body').innerHTML=attemptsInfo+questions.map((q,i)=>`
+    <div class="qcard">
+      <div class="qnum">Pregunta ${i+1} / ${questions.length} &nbsp;&bull;&nbsp; ${q.pts} pts</div>
+      <div class="qtext">${q.text}</div>
+      ${q.opts.filter(o=>o.trim()).map((o,oi)=>`
+        <label class="opt">
+          <input type="radio" name="q_${q.id}" value="${oi}" onchange="qAnswers['${q.id}']=${oi}"> ${o}
+        </label>`).join('')}
+    </div>`).join('')+`
+  <div style="text-align:center;margin:28px 0">
+    <button class="btn btn-primary" style="padding:13px 36px;font-size:16px" onclick="submitQuiz(false)">
+      <i class="fa fa-check-circle"></i> Enviar Cuestionario</button>
+  </div>`;
+}
+
+function submitQuiz(autoSubmit) {
+  clearQuizTimer();
+  const questions=quizRenderedQuestions;
+  if (!autoSubmit) {
+    const na=questions.filter(q=>qAnswers[q.id]===undefined).length;
+    if (na&&!confirm(`Tienes ${na} pregunta(s) sin responder. ¿Enviar de todas formas?`)) return;
+  }
+  let score=0, max=0;
+  questions.forEach(q=>{max+=q.pts;if(qAnswers[q.id]===q.correct)score+=q.pts;});
+  const subs=DB.get('subs')||[];
+  subs.push({id:'s'+Date.now(),sid:me.id,cid:sCourse.id,qid:cQuiz.id,qtitle:cQuiz.title,type:'quiz',ans:{...qAnswers},score,max,date:new Date().toLocaleDateString('es-CR')});
+  DB.set('subs',subs);
+
+  const pct=Math.round((score/max)*100);
+  const allMyAttempts=subs.filter(s=>s.sid===me.id&&s.qid===cQuiz.id&&s.type==='quiz');
+  const attemptNum=allMyAttempts.length;
+  const maxAttempts=cQuiz.maxAttempts||1;
+  const attemptsLeft=maxAttempts-attemptNum;
+  const cfg=getGradeConfig();
+  const pass=cfg.passThreshold;
+  const approved=pct>=pass;
+  document.getElementById('quiz-body').innerHTML=`
+    <div class="card result-card">
+      <div class="result-emoji">${pct>=90?'🏆':approved?'🎉':'📝'}</div>
+      <div class="result-label">${approved?'¡Aprobado!':'No aprobado — sigue practicando'}</div>
+      <div class="result-pct" style="color:${approved?'var(--success)':'var(--primary)'}">${pct}%</div>
+      <div style="color:var(--muted);margin-bottom:4px">${score} de ${max} puntos</div>
+      <div style="font-size:13px;color:${approved?'var(--success)':'#e74c3c'};font-weight:600">${approved?'Aprobado':'Reprobado'} (mínimo ${pass}%)</div>
+      ${maxAttempts>1?`<div style="margin:10px 0;font-size:13px;color:var(--muted)"><i class="fa fa-redo"></i> Intento ${attemptNum} de ${maxAttempts} utilizado</div>`:''}
+      <div class="result-review">
+        ${questions.map((q,i)=>{
+          const ok=qAnswers[q.id]===q.correct;
+          return `<div class="ritem ${ok?'ok':'nok'}">
+            <strong>${ok?'✅':'❌'} P${i+1}:</strong> ${q.text.length>80?q.text.substring(0,80)+'…':q.text}
+            ${!ok?`<div class="ritem-correct">Respuesta correcta: ${q.opts[q.correct]}</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+        ${attemptsLeft>0?`<button class="btn btn-outline" style="justify-content:center" onclick="startQuiz('${cQuiz.id}')">
+          <i class="fa fa-redo"></i> Intentar de nuevo (${attemptsLeft} intento${attemptsLeft!==1?'s':''} restante${attemptsLeft!==1?'s':''})</button>`
+          :`<div style="padding:10px 12px;background:#fde8e3;border-radius:8px;font-size:13px;color:var(--primary);text-align:center"><i class="fa fa-lock"></i> Has usado todos tus intentos</div>`}
+        <button class="btn btn-primary" style="justify-content:center" onclick="showView('v-scourse');renderSCNav();renderSCContent()">
+          <i class="fa fa-arrow-left"></i> Volver al curso</button>
+        <button class="btn btn-outline" style="justify-content:center" onclick="nav_sgrades()">
+          <i class="fa fa-star"></i> Ver mis resultados</button>
+      </div>
+    </div>`;
+}
+
+// Student Grades
+function renderStudentGrades() {
+  const cfg=getGradeConfig();
+  const pass=cfg.passThreshold;
+  const allSubs=(DB.get('subs')||[]).filter(s=>s.sid===me.id&&(s.type==='quiz'||s.type==='assignment'));
+  const courses=DB.get('courses')||[];
+  const enrolls=(DB.get('enrolls')||[]).filter(e=>e.sid===me.id);
+  const myCourses=enrolls.map(e=>courses.find(c=>c.id===e.cid)).filter(Boolean);
+
+  const tb=document.getElementById('sgrades-tb');
+
+  // Resumen por curso
+  let summaryHtml='';
+  if (myCourses.length) {
+    summaryHtml=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+    ${myCourses.map(c=>{
+      const final=calcStudentCourseGrade(me.id,c.id,allSubs,cfg);
+      const approved=final!==null&&final>=pass;
+      const color=final===null?'var(--muted)':approved?'var(--success)':'var(--primary)';
+      return `<div class="card" style="padding:16px;text-align:center">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">${c.emoji||'📚'} ${c.title}</div>
+        <div style="font-size:28px;font-weight:800;color:${color}">${final!==null?final+'%':'—'}</div>
+        ${final!==null?`<div style="font-size:12px;margin-top:4px;color:${approved?'var(--success)':'var(--primary)'}">${approved?'✅ Aprobado':'❌ Reprobado'}</div>`:'<div style="font-size:12px;color:var(--muted);margin-top:4px">Sin calificaciones aún</div>'}
+      </div>`;
+    }).join('')}
+    </div>`;
+  }
+  document.getElementById('sgrades-summary')?.remove();
+  const summaryEl=document.createElement('div');
+  summaryEl.id='sgrades-summary';
+  summaryEl.innerHTML=summaryHtml;
+  document.getElementById('v-sgrades').querySelector('.ph').after(summaryEl);
+
+  if (!allSubs.length) { tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No has completado actividades aún</td></tr>'; return; }
+  tb.innerHTML=[...allSubs].reverse().map(s=>{
+    const c=courses.find(x=>x.id===s.cid);
+    if (s.type==='quiz') {
+      const pct=Math.round((s.score/s.max)*100);
+      const approved=pct>=pass;
+      return `<tr>
+        <td><span class="badge b-blue">Cuestionario</span></td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${c?c.title:'—'}</td>
+        <td>${s.qtitle}</td>
+        <td><strong>${s.score}/${s.max}</strong></td>
+        <td><span class="badge ${approved?'b-green':'b-red'}">${pct}% &mdash; ${approved?'Aprobado':'Reprobado'}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${s.date}</td>
+      </tr>`;
+    } else {
+      const graded=s.graded||false;
+      const approved=graded&&Number(s.grade)>=pass;
+      return `<tr>
+        <td><span class="badge b-purple">Tarea</span></td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${c?c.title:'—'}</td>
+        <td>${s.atitle||'—'}</td>
+        <td><strong>${graded?s.grade+'/100':'—'}</strong></td>
+        <td>${graded
+          ?`<span class="badge ${approved?'b-green':'b-red'}">${approved?'Aprobado':'Reprobado'}</span>${s.feedback?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${s.feedback}</div>`:''}`
+          :`<span class="badge b-gray">Pendiente revisión</span>`}</td>
+        <td style="font-size:12px;color:var(--muted)">${s.date}</td>
+      </tr>`;
+    }
+  }).join('');
+}
+
+// ─── Export Grades CSV ────────────────────────────────────────
+function exportGradesCSV() {
+  const allSubs=(DB.get('subs')||[]).filter(s=>s.type==='quiz'||s.type==='assignment');
+  const users=DB.get('users')||[], courses=DB.get('courses')||[];
+  if (!allSubs.length) { toast('No hay calificaciones para exportar','err'); return; }
+  const headers=['Tipo','Estudiante','Correo','Curso','Actividad','Nota','Porcentaje','Estado','Fecha'];
+  const rows = allSubs.map(s=>{
+    const st=users.find(u=>u.id===s.sid)||{name:'—',email:''};
+    const c=courses.find(x=>x.id===s.cid)||{title:'—'};
+    if (s.type==='quiz') {
+      const pct=Math.round((s.score/s.max)*100);
+      return [
+        'Cuestionario',
+        `"${(st.name||'').replace(/"/g,'""')}"`,
+        `"${(st.email||'').replace(/"/g,'""')}"`,
+        `"${(c.title||'').replace(/"/g,'""')}"`,
+        `"${(s.qtitle||'').replace(/"/g,'""')}"`,
+        `"${s.score}/${s.max}"`,
+        pct+'%',
+        pct>=getGradeConfig().passThreshold?'Aprobado':'Reprobado',
+        `"${s.date}"`
+      ].join(',');
+    } else {
+      const nota=s.graded?s.grade+'':'-';
+      const pctStr=s.graded?s.grade+'%':'-';
+      const estado=s.graded?(s.grade>=getGradeConfig().passThreshold?'Aprobado':'Reprobado'):'Pendiente';
+      return [
+        'Tarea',
+        `"${(st.name||'').replace(/"/g,'""')}"`,
+        `"${(st.email||'').replace(/"/g,'""')}"`,
+        `"${(c.title||'').replace(/"/g,'""')}"`,
+        `"${(s.atitle||'').replace(/"/g,'""')}"`,
+        nota,
+        pctStr,
+        estado,
+        `"${s.date}"`
+      ].join(',');
+    }
+  });
+  const csv = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href=url; a.download=`Calificaciones_Campus_INNOVA_506_${today}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Archivo CSV exportado');
+}
+
+// ─── Export Student PDF ───────────────────────────────────────
+function exportStudentPDF(sid) {
+  const users=DB.get('users')||[], courses=DB.get('courses')||[];
+  const subs=(DB.get('subs')||[]).filter(s=>s.type==='quiz'&&s.sid===sid);
+  const st=users.find(u=>u.id===sid);
+  if (!st) { toast('Estudiante no encontrado','err'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const today=new Date().toLocaleDateString('es-CR');
+
+  // Header bar
+  doc.setFillColor(224,78,46);
+  doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14); doc.setFont('helvetica','bold');
+  doc.text('Campus INNOVA 506 - Reporte de Estudiante', W/2, 14, {align:'center'});
+
+  // Student info box
+  doc.setFillColor(245,245,245);
+  doc.rect(10,27,W-20,28,'F');
+  doc.setTextColor(58,58,58);
+  doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text(st.name, 16, 36);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.setTextColor(100,100,100);
+  doc.text(`Correo: ${st.email||'—'}`, 16, 43);
+  doc.text(`Usuario: ${st.username}`, 16, 49);
+  doc.text(`Código de acceso: ${st.accessCode||'—'}`, W/2, 43);
+
+  // Table
+  let tableRows = [];
+  if (subs.length) {
+    tableRows = subs.map(s=>{
+      const c=courses.find(x=>x.id===s.cid)||{title:'—'};
+      const pct=Math.round((s.score/s.max)*100);
+      return [c.title, s.qtitle, `${s.score}/${s.max}`, pct+'%', pct>=getGradeConfig().passThreshold?'Aprobado':'Reprobado', s.date];
+    });
+  }
+
+  doc.autoTable({
+    startY: 60,
+    head: [['Curso','Cuestionario','Nota','%','Estado','Fecha']],
+    body: tableRows.length ? tableRows : [['Sin calificaciones','','','','','']],
+    styles: {fontSize:9, cellPadding:3},
+    headStyles: {fillColor:[224,78,46], textColor:255, fontStyle:'bold'},
+    alternateRowStyles: {fillColor:[250,250,250]},
+    columnStyles: {0:{cellWidth:45}, 1:{cellWidth:45}, 2:{cellWidth:20}, 3:{cellWidth:18}, 4:{cellWidth:25}, 5:{cellWidth:27}},
+    margin: {left:10, right:10}
+  });
+
+  // Summary
+  const finalY = doc.lastAutoTable.finalY + 10;
+  if (subs.length) {
+    const avgPct = Math.round(subs.reduce((a,s)=>a+Math.round((s.score/s.max)*100),0)/subs.length);
+    const passed = subs.filter(s=>Math.round((s.score/s.max)*100)>=getGradeConfig().passThreshold).length;
+    doc.setFillColor(245,245,245);
+    doc.rect(10, finalY-5, W-20, 22, 'F');
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(58,58,58);
+    doc.text('Resumen', 16, finalY+2);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(80,80,80);
+    doc.text(`Total cuestionarios: ${subs.length}`, 16, finalY+8);
+    doc.text(`Nota promedio: ${avgPct}%`, 75, finalY+8);
+    doc.text(`Tasa de aprobación: ${Math.round((passed/subs.length)*100)}%`, 140, finalY+8);
+  }
+
+  // Footer
+  const pageH=doc.internal.pageSize.getHeight();
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
+  doc.text(`Generado el ${today} · Campus INNOVA 506`, W/2, pageH-8, {align:'center'});
+
+  const fname=`Reporte_${st.name.replace(/\s+/g,'_')}_Campus_INNOVA_506.pdf`;
+  doc.save(fname);
+  toast('Reporte PDF generado');
+}
+
+// ─── Export General PDF ───────────────────────────────────────
+function exportGeneralPDF() {
+  const users=DB.get('users')||[], courses=DB.get('courses')||[];
+  const allSubs=(DB.get('subs')||[]).filter(s=>s.type==='quiz');
+  const students=users.filter(u=>u.role==='student');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const today=new Date().toLocaleDateString('es-CR');
+
+  // Header
+  doc.setFillColor(224,78,46);
+  doc.rect(0,0,W,22,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15); doc.setFont('helvetica','bold');
+  doc.text('Campus INNOVA 506 - Reporte General de Calificaciones', W/2, 14, {align:'center'});
+
+  // Summary stats
+  const avgAll = allSubs.length ? Math.round(allSubs.reduce((a,s)=>a+Math.round((s.score/s.max)*100),0)/allSubs.length) : 0;
+  const passAll = allSubs.length ? Math.round((allSubs.filter(s=>Math.round((s.score/s.max)*100)>=getGradeConfig().passThreshold).length/allSubs.length)*100) : 0;
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+  doc.text(`Generado: ${today}  |  Estudiantes: ${students.length}  |  Cuestionarios completados: ${allSubs.length}  |  Promedio general: ${avgAll}%  |  Tasa de aprobación: ${passAll}%`, W/2, 29, {align:'center'});
+
+  // All rows
+  const tableRows = allSubs.map(s=>{
+    const st=users.find(u=>u.id===s.sid)||{name:'—',email:''};
+    const c=courses.find(x=>x.id===s.cid)||{title:'—'};
+    const pct=Math.round((s.score/s.max)*100);
+    return [st.name, st.email||'—', c.title, s.qtitle, `${s.score}/${s.max}`, pct+'%', pct>=getGradeConfig().passThreshold?'Aprobado':'Reprobado', s.date];
+  });
+
+  doc.autoTable({
+    startY: 35,
+    head: [['Estudiante','Correo','Curso','Cuestionario','Nota','%','Estado','Fecha']],
+    body: tableRows.length ? tableRows : [['Sin datos','','','','','','','']],
+    styles: {fontSize:8, cellPadding:3},
+    headStyles: {fillColor:[224,78,46], textColor:255, fontStyle:'bold'},
+    alternateRowStyles: {fillColor:[250,250,250]},
+    columnStyles: {0:{cellWidth:38}, 1:{cellWidth:42}, 2:{cellWidth:50}, 3:{cellWidth:50}, 4:{cellWidth:18}, 5:{cellWidth:14}, 6:{cellWidth:22}, 7:{cellWidth:22}},
+    margin: {left:10, right:10}
+  });
+
+  const pageH=doc.internal.pageSize.getHeight();
+  doc.setFontSize(8); doc.setTextColor(150,150,150);
+  doc.text(`Generado el ${today} · Campus INNOVA 506 · Innovasoluciones Empresariales S.R.L`, W/2, pageH-6, {align:'center'});
+
+  doc.save('Reporte_General_Campus_INNOVA_506.pdf');
+  toast('Reporte general PDF generado');
+}
+
+// ─── Backup Export / Import ───────────────────────────────────
+function exportBackup() {
+  const keys = ['users','courses','subs','enrolls','views','init','gradeConfig'];
+  const backup = {};
+  keys.forEach(k => {
+    if (_cache[k] !== undefined) backup['i506_'+k] = JSON.stringify(_cache[k]);
+  });
+  if (!Object.keys(backup).length) { toast('No hay datos para exportar','err'); return; }
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type:'application/json;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href=url; a.download=`Respaldo_Campus_INNOVA_506_${today}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Respaldo exportado exitosamente');
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  const msg = document.getElementById('backup-import-msg');
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const keys = Object.keys(data).filter(k => k.startsWith('i506_'));
+      if (!keys.length) throw new Error('No se encontraron datos válidos de Campus INNOVA 506 en el archivo.');
+      if (!confirm(`Se restaurarán ${keys.length} registros de datos. ¿Confirmar? Esto sobrescribirá los datos actuales.`)) {
+        input.value=''; return;
+      }
+      keys.forEach(k => {
+        const shortKey = k.replace('i506_', '');
+        try { DB.set(shortKey, JSON.parse(data[k])); } catch(ex) {}
+      });
+      msg.style.display='block';
+      msg.style.background='#d4edda'; msg.style.color='#155724';
+      msg.innerHTML=`<i class="fa fa-check-circle"></i> Respaldo importado exitosamente (${keys.length} registros). Recargando...`;
+      setTimeout(() => location.reload(), 1800);
+    } catch(err) {
+      msg.style.display='block';
+      msg.style.background='#fde8e8'; msg.style.color='#721c24';
+      msg.innerHTML=`<i class="fa fa-exclamation-triangle"></i> Error al importar: ${err.message}`;
+      input.value='';
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ─── Course Progress ──────────────────────────────────────────
+function trackMaterialView(sid, cid, mid) {
+  const views=DB.get('views')||[];
+  const already=views.some(v=>v.sid===sid&&v.cid===cid&&v.mid===mid);
+  if (!already) {
+    views.push({sid,cid,mid,date:new Date().toLocaleDateString('es-CR')});
+    DB.set('views',views);
+  }
+}
+
+function getCourseProgress(sid, cid) {
+  const courses=DB.get('courses')||[];
+  const c=courses.find(x=>x.id===cid);
+  if (!c) return 0;
+  const subs=DB.get('subs')||[];
+  const views=DB.get('views')||[];
+
+  const matTotal=c.materials.length;
+  const matDone=new Set(views.filter(v=>v.sid===sid&&v.cid===cid).map(v=>v.mid)).size;
+
+  const qTotal=c.quizzes.length;
+  const qDone=new Set(subs.filter(s=>s.sid===sid&&s.cid===cid&&s.type==='quiz').map(s=>s.qid)).size;
+
+  const aTotal=c.assignments.length;
+  const aDone=new Set(subs.filter(s=>s.sid===sid&&s.cid===cid&&s.type==='assignment').map(s=>s.aid)).size;
+
+  // Weights: materials 40%, quizzes 40%, assignments 20%
+  // Redistribute if a section has 0 items
+  let segments=[];
+  if (matTotal>0) segments.push({done:matDone,total:matTotal,weight:40});
+  if (qTotal>0)   segments.push({done:qDone,  total:qTotal,  weight:40});
+  if (aTotal>0)   segments.push({done:aDone,  total:aTotal,  weight:20});
+
+  if (!segments.length) return 0;
+
+  // Normalize weights to 100
+  const totalW=segments.reduce((a,s)=>a+s.weight,0);
+  let pct=0;
+  segments.forEach(s=>{ pct+=(s.done/s.total)*(s.weight/totalW)*100; });
+  return Math.round(pct);
+}
+
+// ─── Utils ────────────────────────────────────────────────────
+function ytId(url) {
+  const m=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([^&\s?]+)/);
+  return m?m[1]:null;
+}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function toast(msg,type='ok') {
+  const el=document.getElementById('toast-el');
+  el.textContent=(type==='err'?'⚠️ ':'✅ ')+msg;
+  el.style.background=type==='err'?'#e74c3c':'#27ae60';
+  el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000);
+}
+document.querySelectorAll('.mbk').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('active');}));
+
+// ─── Emoji Picker ─────────────────────────────────────────────
+function setEmojiPicker(emoji) {
+  document.getElementById('cf-emoji').value = emoji;
+  document.getElementById('cf-emoji-display').textContent = emoji;
+}
+function toggleEmojiPanel(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('emoji-panel');
+  panel.classList.toggle('open');
+}
+function pickEmoji(emoji) {
+  setEmojiPicker(emoji);
+  document.getElementById('emoji-panel').classList.remove('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('emoji-panel')?.classList.remove('open');
+});
+
+// ─── Quiz Import / Export ─────────────────────────────────────
+function downloadQuizTemplate() {
+  const bom = '\uFEFF';
+  const header = 'Pregunta,Opcion_A_(Correcta),Opcion_B,Opcion_C,Opcion_D,Puntos\n';
+  const rows = [
+    '"¿Cuál es el objetivo principal de Lean Six Sigma?","Reducir desperdicios y variabilidad","Aumentar la velocidad de producción","Reducir el personal","Incrementar los costos",10',
+    '"¿Qué significa DMAIC?","Definir, Medir, Analizar, Mejorar, Controlar","Diseñar, Medir, Analizar, Implementar, Controlar","Definir, Mapear, Actuar, Integrar, Cerrar","Desarrollar, Medir, Aplicar, Innovar, Controlar",10',
+    '"Ejemplo de pregunta 3","Respuesta correcta va siempre en Opcion_A","Opción incorrecta B","Opción incorrecta C","Opción incorrecta D",10',
+  ].join('\n');
+  const instrucciones = '\n\n--- INSTRUCCIONES ---\n' +
+    '"La respuesta CORRECTA debe ir SIEMPRE en la columna Opcion_A_(Correcta)"\n' +
+    '"Las opciones B C y D son incorrectas"\n' +
+    '"El sistema mezclará automáticamente las opciones si activás esa opción"\n' +
+    '"Puntos: número entero (ej: 10)"\n' +
+    '"No modifiques la primera fila de encabezados"';
+  const csv = bom + header + rows + instrucciones;
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Plantilla_Cuestionario_Campus_INNOVA_506.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('Plantilla descargada');
+}
+
+function importQuizCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('quiz-import-preview');
+    try {
+      const text = e.target.result.replace(/^\uFEFF/, ''); // strip BOM
+      const lines = text.split(/\r?\n/).filter(l => l.trim() && !l.startsWith('"---') && !l.startsWith('---'));
+
+      // Skip header row
+      const dataLines = lines.slice(1).filter(l => !l.toLowerCase().startsWith('pregunta'));
+
+      if (!dataLines.length) { toast('El archivo no contiene preguntas válidas','err'); return; }
+
+      const parsed = [], errors = [], previewHtml = [];
+
+      dataLines.forEach((line, i) => {
+        // Parse CSV line (handles quoted fields with commas inside)
+        const cols = [];
+        let cur = '', inQ = false;
+        for (let ci = 0; ci < line.length; ci++) {
+          const ch = line[ci];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+          else cur += ch;
+        }
+        cols.push(cur.trim());
+
+        const [pregunta, optA, optB, optC, optD, pts] = cols;
+        if (!pregunta || !optA) {
+          errors.push(`Fila ${i+2}: falta pregunta o opción A`);
+          previewHtml.push(`<div class="import-preview-row err">❌ Fila ${i+2}: falta pregunta o respuesta correcta</div>`);
+          return;
+        }
+        const puntos = parseInt(pts) || 10;
+        // Correct answer is always index 0 (optA), other opts fill B,C,D
+        const opts = [optA, optB||'', optC||'', optD||''].filter(o => o !== '');
+        // Pad to at least 2 options
+        while (opts.length < 2) opts.push('Opción ' + (opts.length + 1));
+
+        parsed.push({
+          id: 'qq' + Date.now() + i,
+          text: pregunta.replace(/^"|"$/g,''),
+          opts: opts.map(o => o.replace(/^"|"$/g,'')),
+          correct: 0, // always first option = correct
+          pts: puntos
+        });
+        previewHtml.push(`<div class="import-preview-row ok">✅ P${parsed.length}: ${pregunta.replace(/^"|"$/g,'').substring(0,60)}${pregunta.length>60?'…':''} — ${puntos} pts</div>`);
+      });
+
+      preview.innerHTML = `<div style="font-size:12px;font-weight:700;margin-bottom:4px;color:var(--muted)">${parsed.length} pregunta(s) importada(s)${errors.length?' · '+errors.length+' error(es)':''}</div>` + previewHtml.join('');
+
+      if (!parsed.length) { toast('No se pudo importar ninguna pregunta','err'); input.value=''; return; }
+
+      // Merge with existing questions or replace
+      if (qqList.length > 0 && qqList.some(q => q.text)) {
+        if (confirm(`Ya hay ${qqList.length} pregunta(s) en el editor.\n¿Agregar las ${parsed.length} importadas al final? (Cancelar = reemplazar todo)`)) {
+          qqList = [...qqList, ...parsed];
+        } else {
+          qqList = parsed;
+        }
+      } else {
+        qqList = parsed;
+      }
+      renderQBuilder();
+      toast(`${parsed.length} pregunta(s) importadas correctamente`);
+    } catch(err) {
+      document.getElementById('quiz-import-preview').innerHTML =
+        `<div class="import-preview-row err">❌ Error al leer el archivo: ${err.message}</div>`;
+      toast('Error al procesar el CSV','err');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ─── CUADERNO DE CALIFICACIONES (GRADEBOOK) ───────────────────
+// ═══════════════════════════════════════════════════════════════
+
+const DEFAULT_GRADE_CONFIG = {
+  passThreshold: 70,
+  aggregation: 'weighted_mean',  // 'weighted_mean' | 'mean' | 'sum' | 'highest'
+  quizWeight: 60,
+  assignWeight: 40,
+  displayType: 'percentage',     // 'percentage' | 'points' | 'both'
+  dropLowest: 0
+};
+
+function getGradeConfig() {
+  const saved = DB.get('gradeConfig');
+  return saved ? {...DEFAULT_GRADE_CONFIG, ...saved} : {...DEFAULT_GRADE_CONFIG};
+}
+
+function formatGradeDisplay(pct, score, max, cfg) {
+  if (!cfg) cfg = getGradeConfig();
+  if (cfg.displayType === 'points') return score !== undefined ? score+'/'+max : pct+'%';
+  if (cfg.displayType === 'both')   return score !== undefined ? pct+'% ('+score+'/'+max+')' : pct+'%';
+  return pct + '%';
+}
+
+function calcStudentCourseGrade(sid, cid, allSubs, cfg) {
+  if (!cfg) cfg = getGradeConfig();
+
+  // Best attempt per quiz
+  const quizByQid = {};
+  allSubs.filter(s=>s.sid===sid&&s.cid===cid&&s.type==='quiz').forEach(s=>{
+    if (!quizByQid[s.qid] || s.score > quizByQid[s.qid].score) quizByQid[s.qid] = s;
+  });
+  let quizPcts = Object.values(quizByQid).map(s=>Math.round((s.score/s.max)*100));
+
+  // Drop N lowest quiz grades
+  if (cfg.dropLowest > 0 && quizPcts.length > cfg.dropLowest) {
+    quizPcts = [...quizPcts].sort((a,b)=>a-b).slice(cfg.dropLowest);
+  }
+
+  const assignSubs = allSubs.filter(s=>s.sid===sid&&s.cid===cid&&s.type==='assignment'&&s.graded);
+  const assignPcts = assignSubs.map(s=>Number(s.grade));
+
+  const quizAvg  = quizPcts.length   ? quizPcts.reduce((a,b)=>a+b,0)/quizPcts.length     : null;
+  const assignAvg= assignPcts.length ? assignPcts.reduce((a,b)=>a+b,0)/assignPcts.length  : null;
+
+  let final = null;
+  const qw = cfg.quizWeight/100, aw = cfg.assignWeight/100;
+
+  if (cfg.aggregation === 'weighted_mean') {
+    if (quizAvg !== null && assignAvg !== null) final = quizAvg*qw + assignAvg*aw;
+    else if (quizAvg !== null)  final = quizAvg;
+    else if (assignAvg !== null) final = assignAvg;
+  } else if (cfg.aggregation === 'mean') {
+    const vals = [quizAvg, assignAvg].filter(v=>v!==null);
+    final = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  } else if (cfg.aggregation === 'sum') {
+    const vals = [...quizPcts, ...assignPcts];
+    final = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  } else if (cfg.aggregation === 'highest') {
+    const vals = [...quizPcts, ...assignPcts];
+    final = vals.length ? Math.max(...vals) : null;
+  }
+
+  return final !== null ? Math.round(final) : null;
+}
+
+// ─── Gradebook Tab ────────────────────────────────────────────
+let gbTabActive = 'report';
+let gbSelectedCourse = 'all';
+
+function gbTab(tab, el) {
+  gbTabActive = tab;
+  document.querySelectorAll('#gb-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if (tab === 'report') renderGradeBook();
+  else renderGradeConfig();
+}
+
+// ─── Cuaderno por curso (desde editor) ────────────────────────
+function renderCourseGradeBook(el, c) {
+  const cfg = getGradeConfig();
+  const users = DB.get('users')||[];
+  const enrolls = DB.get('enrolls')||[];
+  const allSubs = DB.get('subs')||[];
+  const enrolled = enrolls.filter(e=>e.cid===c.id).map(e=>users.find(u=>u.id===e.sid)).filter(Boolean);
+
+  if (!enrolled.length) {
+    el.innerHTML='<div class="empty"><i class="fa fa-users"></i><p>No hay estudiantes inscritos en este curso.</p></div>'; return;
+  }
+
+  const quizzes = c.quizzes||[];
+  const assigns = c.assignments||[];
+
+  // Header
+  const thQ = quizzes.map(q=>`<th class="gb-cat-quiz" title="${q.title}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.title.length>14?q.title.slice(0,13)+'…':q.title}</th>`).join('');
+  const thA = assigns.map(a=>`<th class="gb-cat-assign" title="${a.title}" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.title.length>14?a.title.slice(0,13)+'…':a.title}</th>`).join('');
+
+  const colQ = quizzes.length + (quizzes.length?1:0);
+  const colA = assigns.length + (assigns.length?1:0);
+
+  const groupRow = `<tr>
+    <th class="gb-name" rowspan="2">Estudiante</th>
+    ${quizzes.length?`<th class="gb-cat-quiz" colspan="${colQ}" style="text-align:center">📝 Cuestionarios (${cfg.quizWeight}%)</th>`:''}
+    ${assigns.length?`<th class="gb-cat-assign" colspan="${colA}" style="text-align:center">📋 Tareas (${cfg.assignWeight}%)</th>`:''}
+    <th class="gb-total" rowspan="2">Nota Final</th>
+  </tr>
+  <tr>
+    ${thQ}${quizzes.length?`<th class="gb-cat-quiz">Prom.</th>`:''}
+    ${thA}${assigns.length?`<th class="gb-cat-assign">Prom.</th>`:''}
+  </tr>`;
+
+  const classData = { qTotals: quizzes.map(()=>[]), aTotals: assigns.map(()=>[]), finals:[] };
+
+  const rows = enrolled.map(st=>{
+    // Quiz cells
+    const qCells = quizzes.map((q,qi)=>{
+      const attempts = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.qid===q.id&&s.type==='quiz');
+      if (!attempts.length) return `<td class="gb-cell-empty">—</td>`;
+      const best = attempts.reduce((b,s)=>s.score>b.score?s:b, attempts[0]);
+      const pct = Math.round((best.score/best.max)*100);
+      classData.qTotals[qi].push(pct);
+      return `<td class="${pct>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}">${pct}%</td>`;
+    }).join('');
+
+    const myQByQid = {};
+    allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{
+      if (!myQByQid[s.qid]||s.score>myQByQid[s.qid].score) myQByQid[s.qid]=s;
+    });
+    let qPcts = Object.values(myQByQid).map(s=>Math.round((s.score/s.max)*100));
+    if (cfg.dropLowest>0&&qPcts.length>cfg.dropLowest) qPcts=[...qPcts].sort((a,b)=>a-b).slice(cfg.dropLowest);
+    const qAvg = qPcts.length ? Math.round(qPcts.reduce((a,b)=>a+b,0)/qPcts.length) : null;
+    const qAvgCell = quizzes.length ? (qAvg!==null
+      ? `<td class="gb-cat-quiz ${qAvg>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}" style="font-weight:700">${qAvg}%</td>`
+      : `<td class="gb-cell-empty">—</td>`) : '';
+
+    // Assignment cells
+    const aCells = assigns.map((a,ai)=>{
+      const sub = allSubs.find(s=>s.sid===st.id&&s.cid===c.id&&s.aid===a.id&&s.type==='assignment');
+      if (!sub||!sub.graded) return `<td class="gb-cell-empty">—</td>`;
+      const pct = Number(sub.grade);
+      classData.aTotals[ai].push(pct);
+      return `<td class="${pct>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}">${pct}%</td>`;
+    }).join('');
+
+    const aSubs = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded);
+    const aPcts = aSubs.map(s=>Number(s.grade));
+    const aAvg = aPcts.length ? Math.round(aPcts.reduce((a,b)=>a+b,0)/aPcts.length) : null;
+    const aAvgCell = assigns.length ? (aAvg!==null
+      ? `<td class="gb-cat-assign ${aAvg>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}" style="font-weight:700">${aAvg}%</td>`
+      : `<td class="gb-cell-empty">—</td>`) : '';
+
+    const final = calcStudentCourseGrade(st.id, c.id, allSubs, cfg);
+    if (final!==null) classData.finals.push(final);
+    const finalCell = final!==null
+      ? `<td class="gb-cell-final ${final>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}">${final}%</td>`
+      : `<td class="gb-cell-empty">—</td>`;
+
+    return `<tr><td class="gb-student">${st.name}<div style="font-size:11px;color:var(--muted)">${st.username}</div></td>${qCells}${qAvgCell}${aCells}${aAvgCell}${finalCell}</tr>`;
+  }).join('');
+
+  // Promedio clase
+  const avgQCells = quizzes.map((_,qi)=>{
+    const v=classData.qTotals[qi]; if(!v.length) return `<td class="gb-cell-empty">—</td>`;
+    return `<td style="font-weight:700;color:#7d6608">${Math.round(v.reduce((a,b)=>a+b,0)/v.length)}%</td>`;
+  }).join('');
+  const allQ = classData.qTotals.flat();
+  const avgQCat = quizzes.length ? (allQ.length?`<td style="font-weight:800;color:#1a5276">${Math.round(allQ.reduce((a,b)=>a+b,0)/allQ.length)}%</td>`:`<td>—</td>`):'';
+  const avgACells = assigns.map((_,ai)=>{
+    const v=classData.aTotals[ai]; if(!v.length) return `<td class="gb-cell-empty">—</td>`;
+    return `<td style="font-weight:700;color:#145a32">${Math.round(v.reduce((a,b)=>a+b,0)/v.length)}%</td>`;
+  }).join('');
+  const allA = classData.aTotals.flat();
+  const avgACat = assigns.length ? (allA.length?`<td style="font-weight:800;color:#145a32">${Math.round(allA.reduce((a,b)=>a+b,0)/allA.length)}%</td>`:`<td>—</td>`):'';
+  const avgFinal = classData.finals.length ? Math.round(classData.finals.reduce((a,b)=>a+b,0)/classData.finals.length) : null;
+  const avgFinalCell = avgFinal!==null ? `<td class="gb-cell-final" style="color:#4a235a">${avgFinal}%</td>` : `<td>—</td>`;
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-success btn-sm" onclick="exportCourseGradeCSV('${c.id}')"><i class="fa fa-file-excel"></i> Exportar CSV</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+      <i class="fa fa-users"></i> ${enrolled.length} estudiante${enrolled.length!==1?'s':''} inscritos &nbsp;·&nbsp;
+      Aprobación: <strong>${cfg.passThreshold}%</strong> &nbsp;·&nbsp;
+      ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Suma':'Nota más alta'}
+    </div>
+    <div class="gb-wrap">
+      <table class="gb-table">
+        <thead>${groupRow}</thead>
+        <tbody>
+          ${rows}
+          <tr class="gb-avg-row">
+            <td class="gb-student">📊 Promedio clase</td>
+            ${avgQCells}${avgQCat}${avgACells}${avgACat}${avgFinalCell}
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function exportCourseGradeCSV(cid) {
+  const cfg = getGradeConfig();
+  const courses = DB.get('courses')||[];
+  const c = courses.find(x=>x.id===cid); if(!c) return;
+  const users = DB.get('users')||[];
+  const enrolls = DB.get('enrolls')||[];
+  const allSubs = DB.get('subs')||[];
+  const enrolled = enrolls.filter(e=>e.cid===cid).map(e=>users.find(u=>u.id===e.sid)).filter(Boolean);
+  const quizzes = c.quizzes||[], assigns = c.assignments||[];
+
+  const qH = quizzes.map(q=>`"${q.title}"`).join(',');
+  const aH = assigns.map(a=>`"${a.title}"`).join(',');
+  let csv = `\uFEFF"Estudiante",${qH}${qH?',':''}"Prom. Cuestionarios",${aH}${aH?',':''}"Prom. Tareas","Nota Final"\n`;
+
+  enrolled.forEach(st=>{
+    const qByQid={};
+    allSubs.filter(s=>s.sid===st.id&&s.cid===cid&&s.type==='quiz').forEach(s=>{ if(!qByQid[s.qid]||s.score>qByQid[s.qid].score) qByQid[s.qid]=s; });
+    const qVals = quizzes.map(q=>{ const s=qByQid[q.id]; return s?Math.round((s.score/s.max)*100)+'%':'—'; });
+    const qPcts = Object.values(qByQid).map(s=>Math.round((s.score/s.max)*100));
+    const qAvg = qPcts.length ? Math.round(qPcts.reduce((a,b)=>a+b,0)/qPcts.length)+'%' : '—';
+    const aVals = assigns.map(a=>{ const s=allSubs.find(x=>x.sid===st.id&&x.cid===cid&&x.aid===a.id&&x.graded); return s?s.grade+'%':'—'; });
+    const aPcts = allSubs.filter(s=>s.sid===st.id&&s.cid===cid&&s.type==='assignment'&&s.graded).map(s=>Number(s.grade));
+    const aAvg = aPcts.length ? Math.round(aPcts.reduce((a,b)=>a+b,0)/aPcts.length)+'%' : '—';
+    const final = calcStudentCourseGrade(st.id, cid, allSubs, cfg);
+    csv += `"${st.name}",${qVals.join(',')},${qAvg},${aVals.join(',')},${aAvg},${final!==null?final+'%':'—'}\n`;
+  });
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`Calificaciones_${c.title.replace(/\s+/g,'_')}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exportado');
+}
+
+// ─── Grader Report ────────────────────────────────────────────
+function renderGradeBook() {
+  const cfg = getGradeConfig();
+  const courses = DB.get('courses')||[];
+  const users = DB.get('users')||[];
+  const enrolls = DB.get('enrolls')||[];
+  const allSubs = DB.get('subs')||[];
+  const students = users.filter(u=>u.role==='student');
+
+  // Actions bar: course selector + export button
+  document.getElementById('gb-actions').innerHTML = `
+    <select onchange="gbSelectedCourse=this.value;renderGradeBook()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px">
+      <option value="all">Todos los cursos</option>
+      ${courses.map(c=>`<option value="${c.id}" ${gbSelectedCourse===c.id?'selected':''}>${c.emoji||'📚'} ${c.title}</option>`).join('')}
+    </select>
+    <button class="btn btn-success" onclick="exportGradebookCSV()"><i class="fa fa-file-excel"></i> Exportar CSV</button>`;
+
+  const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
+  if (!filteredCourses.length) {
+    document.getElementById('gb-body').innerHTML='<div class="empty"><i class="fa fa-table"></i><p>No hay cursos disponibles</p></div>'; return;
+  }
+
+  let html = '';
+
+  filteredCourses.forEach(c => {
+    const enrolled = enrolls.filter(e=>e.cid===c.id).map(e=>students.find(u=>u.id===e.sid)).filter(Boolean);
+    if (!enrolled.length) return;
+
+    const quizzes = c.quizzes||[];
+    const assigns = c.assignments||[];
+    const hasQuizzes  = quizzes.length > 0;
+    const hasAssigns  = assigns.length > 0;
+    const showQuizCat = hasQuizzes;
+    const showAssignCat = hasAssigns;
+
+    // Build header
+    let thQuizzes = quizzes.map(q=>`<th class="gb-cat-quiz" title="${q.title}">${q.title.length>14?q.title.substring(0,13)+'…':q.title}</th>`).join('');
+    let thAssigns = assigns.map(a=>`<th class="gb-cat-assign" title="${a.title}">${a.title.length>14?a.title.substring(0,13)+'…':a.title}</th>`).join('');
+
+    let colspanQuiz   = quizzes.length + (showQuizCat?1:0);
+    let colspanAssign = assigns.length + (showAssignCat?1:0);
+
+    let groupRow = `<tr>
+      <th class="gb-name" rowspan="2">Estudiante</th>
+      ${showQuizCat&&quizzes.length?`<th class="gb-cat-quiz" colspan="${colspanQuiz}" style="text-align:center">📝 Cuestionarios (${cfg.quizWeight}%)</th>`:''}
+      ${showAssignCat&&assigns.length?`<th class="gb-cat-assign" colspan="${colspanAssign}" style="text-align:center">📋 Tareas (${cfg.assignWeight}%)</th>`:''}
+      <th class="gb-total" rowspan="2">Nota Final</th>
+    </tr>
+    <tr>
+      ${thQuizzes}
+      ${showQuizCat&&quizzes.length?`<th class="gb-cat-quiz">Prom.</th>`:''}
+      ${thAssigns}
+      ${showAssignCat&&assigns.length?`<th class="gb-cat-assign">Prom.</th>`:''}
+    </tr>`;
+
+    // Build student rows + collect data for class average
+    const classData = { quizTotals: quizzes.map(()=>[]), assignTotals: assigns.map(()=>[]), finals:[] };
+
+    let rows = enrolled.map(st => {
+      // Per-quiz: best attempt
+      let quizCells = quizzes.map((q,qi)=>{
+        const attempts = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.qid===q.id&&s.type==='quiz');
+        if (!attempts.length) return `<td class="gb-cell-empty">—</td>`;
+        const best = attempts.reduce((b,s)=>s.score>b.score?s:b, attempts[0]);
+        const pct = Math.round((best.score/best.max)*100);
+        const cls = pct>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail';
+        classData.quizTotals[qi].push(pct);
+        return `<td class="${cls}">${pct}%</td>`;
+      }).join('');
+
+      // Quiz category average
+      const myQuizByQid = {};
+      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{
+        if (!myQuizByQid[s.qid]||s.score>myQuizByQid[s.qid].score) myQuizByQid[s.qid]=s;
+      });
+      let quizPcts = Object.values(myQuizByQid).map(s=>Math.round((s.score/s.max)*100));
+      if (cfg.dropLowest>0 && quizPcts.length>cfg.dropLowest) quizPcts=[...quizPcts].sort((a,b)=>a-b).slice(cfg.dropLowest);
+      const quizAvg = quizPcts.length ? Math.round(quizPcts.reduce((a,b)=>a+b,0)/quizPcts.length) : null;
+      const quizAvgCell = showQuizCat&&quizzes.length ? (quizAvg!==null
+        ? `<td class="gb-cat-quiz ${quizAvg>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}" style="font-weight:700">${quizAvg}%</td>`
+        : `<td class="gb-cell-empty">—</td>`) : '';
+
+      // Per-assignment
+      let assignCells = assigns.map((a,ai)=>{
+        const sub = allSubs.find(s=>s.sid===st.id&&s.cid===c.id&&s.aid===a.id&&s.type==='assignment');
+        if (!sub||!sub.graded) return `<td class="gb-cell-empty">—</td>`;
+        const pct = Number(sub.grade);
+        const cls = pct>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail';
+        classData.assignTotals[ai].push(pct);
+        return `<td class="${cls}">${pct}%</td>`;
+      }).join('');
+
+      const assignSubs2 = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded);
+      const assignPcts = assignSubs2.map(s=>Number(s.grade));
+      const assignAvg = assignPcts.length ? Math.round(assignPcts.reduce((a,b)=>a+b,0)/assignPcts.length) : null;
+      const assignAvgCell = showAssignCat&&assigns.length ? (assignAvg!==null
+        ? `<td class="gb-cat-assign ${assignAvg>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail'}" style="font-weight:700">${assignAvg}%</td>`
+        : `<td class="gb-cell-empty">—</td>`) : '';
+
+      // Final grade
+      const final = calcStudentCourseGrade(st.id, c.id, allSubs, cfg);
+      if (final!==null) classData.finals.push(final);
+      const finalCls = final!==null ? (final>=cfg.passThreshold?'gb-cell-pass':'gb-cell-fail') : 'gb-cell-empty';
+      const finalCell = final!==null
+        ? `<td class="gb-cell-final ${finalCls}">${final}%</td>`
+        : `<td class="gb-cell-empty">—</td>`;
+
+      return `<tr>
+        <td class="gb-student">${st.name}</td>
+        ${quizCells}${quizAvgCell}
+        ${assignCells}${assignAvgCell}
+        ${finalCell}
+      </tr>`;
+    }).join('');
+
+    // Class average row
+    const avgQuizCells = quizzes.map((_,qi)=>{
+      const vals = classData.quizTotals[qi];
+      if (!vals.length) return `<td class="gb-cell-empty">—</td>`;
+      const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      return `<td style="font-weight:700;color:#7d6608">${avg}%</td>`;
+    }).join('');
+    const avgQuizCatCell = showQuizCat&&quizzes.length ? (()=>{
+      const all = classData.quizTotals.flat();
+      return all.length ? `<td style="font-weight:800;color:#1a5276">${Math.round(all.reduce((a,b)=>a+b,0)/all.length)}%</td>` : `<td>—</td>`;
+    })() : '';
+    const avgAssignCells = assigns.map((_,ai)=>{
+      const vals = classData.assignTotals[ai];
+      if (!vals.length) return `<td class="gb-cell-empty">—</td>`;
+      const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+      return `<td style="font-weight:700;color:#145a32">${avg}%</td>`;
+    }).join('');
+    const avgAssignCatCell = showAssignCat&&assigns.length ? (()=>{
+      const all = classData.assignTotals.flat();
+      return all.length ? `<td style="font-weight:800;color:#145a32">${Math.round(all.reduce((a,b)=>a+b,0)/all.length)}%</td>` : `<td>—</td>`;
+    })() : '';
+    const classAvgFinal = classData.finals.length ? Math.round(classData.finals.reduce((a,b)=>a+b,0)/classData.finals.length) : null;
+    const avgFinalCell = classAvgFinal!==null
+      ? `<td class="gb-cell-final" style="color:#4a235a">${classAvgFinal}%</td>`
+      : `<td>—</td>`;
+
+    html += `
+      <div class="card" style="margin-bottom:24px;padding:0;overflow:hidden">
+        <div style="padding:14px 20px;background:#f8f9fa;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">${c.emoji||'📚'}</span>
+          <div>
+            <div style="font-size:16px;font-weight:700">${c.title}</div>
+            <div style="font-size:12px;color:var(--muted)">${enrolled.length} estudiante${enrolled.length!==1?'s':''} · Aprobación: ${cfg.passThreshold}% · ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Suma':'Nota más alta'}</div>
+          </div>
+        </div>
+        <div class="gb-wrap">
+          <table class="gb-table">
+            <thead>${groupRow}</thead>
+            <tbody>
+              ${rows}
+              <tr class="gb-avg-row">
+                <td class="gb-student">📊 Promedio clase</td>
+                ${avgQuizCells}${avgQuizCatCell}
+                ${avgAssignCells}${avgAssignCatCell}
+                ${avgFinalCell}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  });
+
+  if (!html) html = '<div class="empty"><i class="fa fa-table"></i><p>No hay datos de calificaciones aún</p></div>';
+  document.getElementById('gb-body').innerHTML = html;
+}
+
+// ─── Grade Config ─────────────────────────────────────────────
+function renderGradeConfig() {
+  document.getElementById('gb-actions').innerHTML = '';
+  const cfg = getGradeConfig();
+  const aggLabels = {
+    weighted_mean:'Media ponderada (recomendado)',
+    mean:'Media simple',
+    sum:'Suma de notas',
+    highest:'Nota más alta'
+  };
+
+  document.getElementById('gb-body').innerHTML = `
+    <!-- Método de agregación -->
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="fa fa-calculator" style="color:var(--primary)"></i> Método de Cálculo</div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Método de agregación</label>
+          <select id="cfg-agg" onchange="cfgToggleWeights()">
+            ${Object.entries(aggLabels).map(([v,l])=>`<option value="${v}" ${cfg.aggregation===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">Define cómo se calcula la nota final del curso</small>
+        </div>
+        <div class="cfg-item">
+          <label>Umbral de aprobación (%)</label>
+          <input type="number" id="cfg-pass" value="${cfg.passThreshold}" min="1" max="100">
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">Porcentaje mínimo para aprobar (actualmente ${cfg.passThreshold}%)</small>
+        </div>
+        <div class="cfg-item">
+          <label>Descartar N notas más bajas de cuestionarios</label>
+          <input type="number" id="cfg-drop" value="${cfg.dropLowest}" min="0" max="10">
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">0 = no descartar. Moodle: "Drop lowest"</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ponderación de categorías -->
+    <div class="cfg-section" id="cfg-weights-section" style="${cfg.aggregation!=='weighted_mean'?'opacity:.5;pointer-events:none':''}">
+      <div class="cfg-section-title"><i class="fa fa-balance-scale" style="color:var(--info)"></i> Ponderación de Categorías <small style="font-weight:400;color:var(--muted)">(solo para Media Ponderada)</small></div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Peso de Cuestionarios (%)</label>
+          <input type="number" id="cfg-qw" value="${cfg.quizWeight}" min="0" max="100" oninput="syncWeights('q')">
+        </div>
+        <div class="cfg-item">
+          <label>Peso de Tareas (%)</label>
+          <input type="number" id="cfg-aw" value="${cfg.assignWeight}" min="0" max="100" oninput="syncWeights('a')">
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:#d0e8f5;border-radius:8px;font-size:13px;color:#155169">
+        <i class="fa fa-info-circle"></i> Los pesos deben sumar 100%. Ej: Cuestionarios 60% + Tareas 40% = 100%
+        <span id="cfg-weight-warn" style="color:#e74c3c;font-weight:700;margin-left:8px;display:none">⚠️ No suman 100%</span>
+      </div>
+    </div>
+
+    <!-- Tipo de visualización -->
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="fa fa-eye" style="color:var(--success)"></i> Tipo de Visualización de Notas</div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Mostrar nota como</label>
+          <select id="cfg-display">
+            <option value="percentage" ${cfg.displayType==='percentage'?'selected':''}>Solo porcentaje (ej: 85%)</option>
+            <option value="points" ${cfg.displayType==='points'?'selected':''}>Solo puntos (ej: 17/20)</option>
+            <option value="both" ${cfg.displayType==='both'?'selected':''}>Porcentaje + puntos (ej: 85% (17/20))</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-primary" onclick="saveGradeConfig()" style="padding:12px 28px">
+        <i class="fa fa-save"></i> Guardar Configuración
+      </button>
+      <button class="btn btn-outline" onclick="resetGradeConfig()">
+        <i class="fa fa-undo"></i> Restaurar valores predeterminados
+      </button>
+    </div>`;
+}
+
+function cfgToggleWeights() {
+  const agg = document.getElementById('cfg-agg').value;
+  const sec = document.getElementById('cfg-weights-section');
+  if (sec) sec.style.cssText = agg!=='weighted_mean' ? 'opacity:.5;pointer-events:none' : '';
+}
+
+function syncWeights(changed) {
+  const qEl = document.getElementById('cfg-qw'), aEl = document.getElementById('cfg-aw');
+  if (!qEl||!aEl) return;
+  const q = parseInt(qEl.value)||0, a = parseInt(aEl.value)||0;
+  const warn = document.getElementById('cfg-weight-warn');
+  if (warn) warn.style.display = (q+a)!==100 ? 'inline' : 'none';
+}
+
+function saveGradeConfig() {
+  const agg = document.getElementById('cfg-agg').value;
+  const pass = parseInt(document.getElementById('cfg-pass').value)||70;
+  const qw = parseInt(document.getElementById('cfg-qw').value)||60;
+  const aw = parseInt(document.getElementById('cfg-aw').value)||40;
+  const drop = parseInt(document.getElementById('cfg-drop').value)||0;
+  const display = document.getElementById('cfg-display').value;
+
+  if (agg==='weighted_mean' && qw+aw!==100) {
+    toast('Los pesos deben sumar exactamente 100%','err'); return;
+  }
+  if (pass<1||pass>100) { toast('El umbral debe estar entre 1 y 100','err'); return; }
+
+  DB.set('gradeConfig',{passThreshold:pass,aggregation:agg,quizWeight:qw,assignWeight:aw,displayType:display,dropLowest:drop});
+  toast('Configuración de calificaciones guardada');
+  renderGradeConfig();
+}
+
+function resetGradeConfig() {
+  if (!confirm('¿Restaurar la configuración predeterminada?')) return;
+  DB.set('gradeConfig', DEFAULT_GRADE_CONFIG);
+  renderGradeConfig();
+  toast('Configuración restaurada');
+}
+
+function exportGradebookCSV() {
+  const cfg = getGradeConfig();
+  const courses = DB.get('courses')||[];
+  const users = DB.get('users')||[];
+  const enrolls = DB.get('enrolls')||[];
+  const allSubs = DB.get('subs')||[];
+  const students = users.filter(u=>u.role==='student');
+  const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
+
+  let csv = '\uFEFF'; // BOM for Excel
+  filteredCourses.forEach(c=>{
+    const enrolled = enrolls.filter(e=>e.cid===c.id).map(e=>students.find(u=>u.id===e.sid)).filter(Boolean);
+    if (!enrolled.length) return;
+    csv += `\n"Curso: ${c.title}"\n`;
+    const qHeaders = (c.quizzes||[]).map(q=>`"${q.title}"`).join(',');
+    const aHeaders = (c.assignments||[]).map(a=>`"${a.title}"`).join(',');
+    csv += `"Estudiante",${qHeaders}${qHeaders?',':''}"Prom. Cuestionarios",${aHeaders}${aHeaders?',':''}"Prom. Tareas","Nota Final"\n`;
+    enrolled.forEach(st=>{
+      const qVals = (c.quizzes||[]).map(q=>{
+        const best = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.qid===q.id&&s.type==='quiz').reduce((b,s)=>(!b||s.score>b.score)?s:b,null);
+        return best ? Math.round((best.score/best.max)*100)+'%' : '—';
+      });
+      const aVals = (c.assignments||[]).map(a=>{
+        const sub = allSubs.find(s=>s.sid===st.id&&s.cid===c.id&&s.aid===a.id&&s.type==='assignment'&&s.graded);
+        return sub ? sub.grade+'%' : '—';
+      });
+      const qByQid={};
+      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{if(!qByQid[s.qid]||s.score>qByQid[s.qid].score)qByQid[s.qid]=s;});
+      const qPcts=Object.values(qByQid).map(s=>Math.round((s.score/s.max)*100));
+      const qAvg=qPcts.length?Math.round(qPcts.reduce((a,b)=>a+b,0)/qPcts.length)+'%':'—';
+      const aSubs=allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded);
+      const aAvg=aSubs.length?Math.round(aSubs.reduce((a,s)=>a+Number(s.grade),0)/aSubs.length)+'%':'—';
+      const final=calcStudentCourseGrade(st.id,c.id,allSubs,cfg);
+      csv += `"${st.name}",${qVals.join(',')},${qAvg},${aVals.join(',')},${aAvg},${final!==null?final+'%':'—'}\n`;
+    });
+  });
+
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Cuaderno_Calificaciones_Campus_INNOVA_506.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exportado exitosamente');
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+startApp();
+</script>
+</body>
+</html>

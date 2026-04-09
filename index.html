@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INNOVA 506 | Innovasoluciones Empresariales</title>
+<meta name="description" content="INNOVA 506 - Soluciones empresariales, capacitacion y campus virtual para el desarrollo profesional en Costa Rica.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ===== VARIABLES ===== */
+:root {
+  --primary: #E04E2E;
+  --primary-dark: #c03c1e;
+  --primary-light: #fde8e3;
+  --dark: #2C2C2C;
+  --dark2: #3A3A3A;
+  --white: #fff;
+  --light: #f7f7f8;
+  --gray: #6b7280;
+  --border: #e5e7eb;
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:var(--font); color:var(--dark); line-height:1.6; background:var(--white); }
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position:fixed; top:0; left:0; right:0; z-index:1000;
+  background:rgba(255,255,255,0.95); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow .3s;
+}
+.navbar.scrolled { box-shadow:0 2px 20px rgba(0,0,0,0.08); }
+.nav-inner {
+  max-width:1200px; margin:0 auto; padding:0 24px;
+  display:flex; align-items:center; justify-content:space-between; height:68px;
+}
+.nav-brand {
+  display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--dark);
+}
+.nav-brand-icon {
+  width:38px; height:38px; background:var(--primary); border-radius:10px;
+  display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:16px;
+}
+.nav-brand-text { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
+.nav-brand-text span { color:var(--primary); }
+.nav-links { display:flex; align-items:center; gap:32px; list-style:none; }
+.nav-links a {
+  text-decoration:none; color:var(--gray); font-size:14px; font-weight:500;
+  transition:color .2s; position:relative;
+}
+.nav-links a:hover { color:var(--primary); }
+.nav-links a::after {
+  content:''; position:absolute; bottom:-4px; left:0; width:0; height:2px;
+  background:var(--primary); transition:width .2s;
+}
+.nav-links a:hover::after { width:100%; }
+.nav-cta {
+  padding:10px 22px; background:var(--primary); color:white !important;
+  border-radius:8px; font-weight:600; font-size:14px; text-decoration:none;
+  transition:background .2s, transform .2s;
+}
+.nav-cta:hover { background:var(--primary-dark); transform:translateY(-1px); }
+.nav-cta::after { display:none !important; }
+.hamburger-web {
+  display:none; background:none; border:none; font-size:22px; color:var(--dark); cursor:pointer;
+}
+
+/* ===== HERO ===== */
+.hero {
+  min-height:100vh; display:flex; align-items:center;
+  background:linear-gradient(135deg, #2C2C2C 0%, #3A3A3A 50%, #E04E2E 100%);
+  position:relative; overflow:hidden;
+}
+.hero::before {
+  content:''; position:absolute; inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner {
+  max-width:1200px; margin:0 auto; padding:120px 24px 80px;
+  display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
+  position:relative; z-index:1;
+}
+.hero-content { color:white; }
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+  padding:6px 16px; border-radius:50px; font-size:13px; color:rgba(255,255,255,0.85);
+  margin-bottom:24px; backdrop-filter:blur(8px);
+}
+.hero-badge i { color:var(--primary); }
+.hero h1 {
+  font-size:52px; font-weight:800; line-height:1.1; letter-spacing:-1.5px; margin-bottom:20px;
+}
+.hero h1 span { color:var(--primary); }
+.hero p {
+  font-size:18px; color:rgba(255,255,255,0.75); max-width:480px; margin-bottom:36px; line-height:1.7;
+}
+.hero-btns { display:flex; gap:14px; flex-wrap:wrap; }
+.btn-hero-primary {
+  padding:14px 32px; background:var(--primary); color:white; border:none; border-radius:10px;
+  font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .2s; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-hero-primary:hover { background:var(--primary-dark); transform:translateY(-2px); box-shadow:0 8px 24px rgba(224,78,46,0.35); }
+.btn-hero-secondary {
+  padding:14px 32px; background:rgba(255,255,255,0.08); color:white;
+  border:1.5px solid rgba(255,255,255,0.2); border-radius:10px;
+  font-size:15px; font-weight:600; cursor:pointer; text-decoration:none;
+  transition:all .2s; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-hero-secondary:hover { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.35); }
+.hero-visual {
+  display:flex; justify-content:center; align-items:center;
+}
+.hero-card {
+  background:rgba(255,255,255,0.07); backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.12); border-radius:20px;
+  padding:40px; width:100%; max-width:420px;
+}
+.hero-stats { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.hero-stat {
+  background:rgba(255,255,255,0.06); border-radius:14px; padding:24px 20px; text-align:center;
+}
+.hero-stat-num { font-size:36px; font-weight:800; color:white; }
+.hero-stat-lbl { font-size:13px; color:rgba(255,255,255,0.6); margin-top:4px; }
+.hero-stat i { font-size:24px; color:var(--primary); margin-bottom:8px; display:block; }
+
+/* ===== SECTIONS COMMON ===== */
+section { padding:100px 24px; }
+.section-inner { max-width:1200px; margin:0 auto; }
+.section-hdr { text-align:center; margin-bottom:60px; }
+.section-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--primary-light); color:var(--primary); padding:6px 16px;
+  border-radius:50px; font-size:12px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.5px; margin-bottom:14px;
+}
+.section-title { font-size:36px; font-weight:800; letter-spacing:-1px; color:var(--dark); }
+.section-desc { font-size:16px; color:var(--gray); max-width:600px; margin:14px auto 0; }
+
+/* ===== ABOUT ===== */
+#nosotros { background:var(--light); }
+.about-grid { display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; }
+.about-text h3 { font-size:28px; font-weight:800; margin-bottom:16px; color:var(--dark); }
+.about-text p { font-size:15px; color:var(--gray); margin-bottom:20px; line-height:1.8; }
+.about-features { display:flex; flex-direction:column; gap:16px; }
+.about-feat {
+  display:flex; align-items:flex-start; gap:14px; padding:16px;
+  background:white; border-radius:var(--radius); box-shadow:var(--shadow);
+  transition:transform .2s;
+}
+.about-feat:hover { transform:translateX(6px); }
+.about-feat-icon {
+  width:44px; height:44px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+}
+.about-feat h4 { font-size:15px; font-weight:700; margin-bottom:3px; }
+.about-feat p { font-size:13px; color:var(--gray); margin:0; }
+.about-image {
+  display:flex; justify-content:center;
+}
+.about-img-card {
+  background:var(--dark); border-radius:20px; padding:40px; width:100%;
+  position:relative; overflow:hidden;
+}
+.about-img-card::before {
+  content:''; position:absolute; top:-50%; right:-50%; width:200%; height:200%;
+  background:radial-gradient(circle at top right, rgba(224,78,46,0.15), transparent 60%);
+}
+.about-img-inner {
+  position:relative; z-index:1; color:white; text-align:center;
+}
+.about-img-inner i { font-size:80px; color:var(--primary); margin-bottom:20px; display:block; }
+.about-img-inner h3 { font-size:22px; font-weight:700; margin-bottom:8px; }
+.about-img-inner p { font-size:14px; color:rgba(255,255,255,0.6); }
+.about-counters { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:24px; }
+.about-counter { text-align:center; padding:16px; background:rgba(255,255,255,0.06); border-radius:12px; }
+.about-counter-num { font-size:28px; font-weight:800; color:var(--primary); }
+.about-counter-lbl { font-size:11px; color:rgba(255,255,255,0.5); margin-top:2px; }
+
+/* ===== SERVICES ===== */
+.services-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.service-card {
+  background:white; border-radius:var(--radius); padding:36px 28px;
+  box-shadow:var(--shadow); border:1px solid var(--border);
+  transition:transform .3s, box-shadow .3s; position:relative; overflow:hidden;
+}
+.service-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-lg); }
+.service-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:4px;
+  background:var(--primary); transform:scaleX(0); transition:transform .3s; transform-origin:left;
+}
+.service-card:hover::before { transform:scaleX(1); }
+.service-icon {
+  width:56px; height:56px; border-radius:14px; display:flex; align-items:center;
+  justify-content:center; font-size:24px; margin-bottom:20px;
+}
+.service-card h3 { font-size:18px; font-weight:700; margin-bottom:10px; }
+.service-card p { font-size:14px; color:var(--gray); line-height:1.7; }
+
+/* ===== CAMPUS ===== */
+#campus { background:var(--dark); color:white; position:relative; overflow:hidden; }
+#campus::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at bottom right, rgba(224,78,46,0.2), transparent 70%);
+}
+.campus-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center;
+  position:relative; z-index:1;
+}
+.campus-text h3 { font-size:32px; font-weight:800; margin-bottom:16px; letter-spacing:-0.5px; }
+.campus-text h3 span { color:var(--primary); }
+.campus-text p { font-size:15px; color:rgba(255,255,255,0.65); margin-bottom:28px; line-height:1.8; }
+.campus-features { display:flex; flex-direction:column; gap:14px; margin-bottom:32px; }
+.campus-feat {
+  display:flex; align-items:center; gap:12px; font-size:14px; color:rgba(255,255,255,0.8);
+}
+.campus-feat i { color:var(--primary); font-size:16px; width:20px; text-align:center; }
+.btn-campus {
+  display:inline-flex; align-items:center; gap:10px; padding:14px 32px;
+  background:var(--primary); color:white; border:none; border-radius:10px;
+  font-size:15px; font-weight:700; cursor:pointer; text-decoration:none;
+  transition:all .2s;
+}
+.btn-campus:hover { background:var(--primary-dark); transform:translateY(-2px); box-shadow:0 8px 24px rgba(224,78,46,0.35); }
+.campus-preview {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px; padding:24px; backdrop-filter:blur(8px);
+}
+.campus-preview-bar {
+  display:flex; align-items:center; gap:8px; margin-bottom:16px; padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.cp-dot { width:10px; height:10px; border-radius:50%; }
+.campus-preview-body { display:flex; flex-direction:column; gap:12px; }
+.cp-row {
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+  background:rgba(255,255,255,0.04); border-radius:10px;
+}
+.cp-row-icon {
+  width:36px; height:36px; border-radius:8px; display:flex; align-items:center;
+  justify-content:center; font-size:14px; flex-shrink:0;
+}
+.cp-row-text { flex:1; }
+.cp-row-text strong { display:block; font-size:13px; font-weight:600; }
+.cp-row-text small { font-size:11px; color:rgba(255,255,255,0.4); }
+.cp-badge {
+  padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600;
+}
+
+/* ===== CONTACT ===== */
+#contacto { background:var(--light); }
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:48px; }
+.contact-info h3 { font-size:24px; font-weight:800; margin-bottom:12px; }
+.contact-info > p { font-size:15px; color:var(--gray); margin-bottom:28px; line-height:1.7; }
+.contact-items { display:flex; flex-direction:column; gap:20px; }
+.contact-item { display:flex; align-items:flex-start; gap:14px; }
+.contact-item-icon {
+  width:44px; height:44px; border-radius:10px; background:var(--primary-light);
+  display:flex; align-items:center; justify-content:center; color:var(--primary);
+  font-size:18px; flex-shrink:0;
+}
+.contact-item h4 { font-size:14px; font-weight:700; margin-bottom:2px; }
+.contact-item p { font-size:13px; color:var(--gray); }
+.contact-item a { color:var(--primary); text-decoration:none; }
+.contact-item a:hover { text-decoration:underline; }
+.contact-form {
+  background:white; border-radius:var(--radius); padding:36px;
+  box-shadow:var(--shadow); border:1px solid var(--border);
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-group { margin-bottom:18px; }
+.form-group label { display:block; font-size:12px; font-weight:700; color:var(--dark); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.3px; }
+.form-group input, .form-group textarea, .form-group select {
+  width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:8px;
+  font-size:14px; font-family:var(--font); outline:none; transition:border-color .2s;
+  background:white; color:var(--dark);
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--primary); }
+.form-group textarea { resize:vertical; min-height:100px; }
+.btn-submit {
+  width:100%; padding:14px; background:var(--primary); color:white; border:none;
+  border-radius:10px; font-size:15px; font-weight:700; cursor:pointer;
+  transition:background .2s, transform .2s;
+}
+.btn-submit:hover { background:var(--primary-dark); transform:translateY(-1px); }
+.form-success {
+  display:none; text-align:center; padding:40px 20px;
+}
+.form-success i { font-size:48px; color:#27ae60; margin-bottom:12px; display:block; }
+.form-success h4 { font-size:18px; margin-bottom:6px; }
+.form-success p { font-size:14px; color:var(--gray); }
+
+/* ===== FOOTER ===== */
+.footer {
+  background:var(--dark); color:white; padding:60px 24px 24px;
+}
+.footer-inner { max-width:1200px; margin:0 auto; }
+.footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; margin-bottom:40px; }
+.footer-brand h3 { font-size:20px; font-weight:800; margin-bottom:8px; }
+.footer-brand h3 span { color:var(--primary); }
+.footer-brand p { font-size:13px; color:rgba(255,255,255,0.5); line-height:1.7; max-width:280px; }
+.footer-col h4 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:rgba(255,255,255,0.4); margin-bottom:16px; }
+.footer-col a { display:block; font-size:14px; color:rgba(255,255,255,0.65); text-decoration:none; margin-bottom:10px; transition:color .2s; }
+.footer-col a:hover { color:var(--primary); }
+.footer-social { display:flex; gap:10px; margin-top:16px; }
+.footer-social a {
+  width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.06);
+  display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.6);
+  text-decoration:none; font-size:14px; transition:all .2s;
+}
+.footer-social a:hover { background:var(--primary); color:white; }
+.footer-bottom {
+  border-top:1px solid rgba(255,255,255,0.08); padding-top:24px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.footer-bottom p { font-size:13px; color:rgba(255,255,255,0.4); }
+
+/* ===== MOBILE ===== */
+.mobile-menu {
+  display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.5);
+}
+.mobile-menu.active { display:block; }
+.mobile-menu-inner {
+  position:absolute; right:0; top:0; bottom:0; width:280px;
+  background:white; padding:24px; display:flex; flex-direction:column;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn { from { transform:translateX(100%); } to { transform:translateX(0); } }
+.mobile-menu-close {
+  align-self:flex-end; background:none; border:none; font-size:22px; cursor:pointer;
+  color:var(--dark); margin-bottom:24px;
+}
+.mobile-menu-links { display:flex; flex-direction:column; gap:4px; }
+.mobile-menu-links a {
+  display:block; padding:12px 16px; font-size:16px; font-weight:500; color:var(--dark);
+  text-decoration:none; border-radius:8px; transition:background .2s;
+}
+.mobile-menu-links a:hover { background:var(--light); }
+.mobile-menu-links .nav-cta {
+  text-align:center; margin-top:12px; color:white;
+}
+
+@media (max-width:900px) {
+  .nav-links { display:none; }
+  .hamburger-web { display:block; }
+  .hero-inner { grid-template-columns:1fr; text-align:center; padding-top:100px; }
+  .hero p { margin:0 auto 36px; }
+  .hero-btns { justify-content:center; }
+  .hero-visual { order:-1; }
+  .hero-card { max-width:340px; }
+  .hero h1 { font-size:36px; }
+  .about-grid { grid-template-columns:1fr; }
+  .about-image { order:-1; }
+  .services-grid { grid-template-columns:1fr; }
+  .campus-grid { grid-template-columns:1fr; }
+  .campus-preview { order:-1; }
+  .contact-grid { grid-template-columns:1fr; }
+  .footer-grid { grid-template-columns:1fr 1fr; }
+  .section-title { font-size:28px; }
+}
+@media (max-width:600px) {
+  .hero h1 { font-size:30px; }
+  .hero-stats { grid-template-columns:1fr 1fr; gap:12px; }
+  .hero-stat-num { font-size:28px; }
+  .form-row { grid-template-columns:1fr; }
+  .footer-grid { grid-template-columns:1fr; }
+  .footer-bottom { flex-direction:column; text-align:center; }
+  section { padding:60px 16px; }
+  .about-counters { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== NAVBAR ===================== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <div class="nav-brand-icon">I5</div>
+      <div class="nav-brand-text"><span>INNOVA</span> 506</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#inicio">Inicio</a></li>
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#campus">Campus Virtual</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+      <li><a href="./campus/" class="nav-cta" target="_blank"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a></li>
+    </ul>
+    <button class="hamburger-web" onclick="toggleMobileMenu()" aria-label="Menu"><i class="fa fa-bars"></i></button>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu" onclick="if(event.target===this)closeMobileMenu()">
+  <div class="mobile-menu-inner">
+    <button class="mobile-menu-close" onclick="closeMobileMenu()"><i class="fa fa-times"></i></button>
+    <div class="mobile-menu-links">
+      <a href="#inicio" onclick="closeMobileMenu()">Inicio</a>
+      <a href="#nosotros" onclick="closeMobileMenu()">Nosotros</a>
+      <a href="#servicios" onclick="closeMobileMenu()">Servicios</a>
+      <a href="#campus" onclick="closeMobileMenu()">Campus Virtual</a>
+      <a href="#contacto" onclick="closeMobileMenu()">Contacto</a>
+      <a href="./campus/" class="nav-cta" target="_blank"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="inicio">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge"><i class="fa fa-bolt"></i> Innovasoluciones Empresariales S.R.L</div>
+      <h1>Impulsamos el <span>crecimiento</span> de tu empresa</h1>
+      <p>Soluciones empresariales integrales, capacitacion profesional y una plataforma virtual de aprendizaje disenada para el exito de las PYMES en Costa Rica.</p>
+      <div class="hero-btns">
+        <a href="#servicios" class="btn-hero-primary"><i class="fa fa-arrow-right"></i> Conoce nuestros servicios</a>
+        <a href="#campus" class="btn-hero-secondary"><i class="fa fa-play-circle"></i> Campus Virtual</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <i class="fa fa-graduation-cap"></i>
+            <div class="hero-stat-num">100+</div>
+            <div class="hero-stat-lbl">Estudiantes capacitados</div>
+          </div>
+          <div class="hero-stat">
+            <i class="fa fa-book-open"></i>
+            <div class="hero-stat-num">15+</div>
+            <div class="hero-stat-lbl">Cursos disponibles</div>
+          </div>
+          <div class="hero-stat">
+            <i class="fa fa-building"></i>
+            <div class="hero-stat-num">50+</div>
+            <div class="hero-stat-lbl">Empresas asesoradas</div>
+          </div>
+          <div class="hero-stat">
+            <i class="fa fa-star"></i>
+            <div class="hero-stat-num">4.8</div>
+            <div class="hero-stat-lbl">Satisfaccion promedio</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== NOSOTROS ===================== -->
+<section id="nosotros">
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="about-text">
+        <div class="section-tag"><i class="fa fa-users"></i> Sobre Nosotros</div>
+        <h3>Innovacion y excelencia empresarial desde Costa Rica</h3>
+        <p>INNOVA 506 es una iniciativa de Innovasoluciones Empresariales S.R.L dedicada a fortalecer el ecosistema empresarial costarricense a traves de capacitacion, asesoria y herramientas tecnologicas de vanguardia.</p>
+        <p>Creemos que el conocimiento es el motor del desarrollo. Por eso, ofrecemos soluciones accesibles que empoderan a profesionales y empresas para alcanzar su maximo potencial.</p>
+        <div class="about-features">
+          <div class="about-feat">
+            <div class="about-feat-icon" style="background:#fde8e3;color:var(--primary);"><i class="fa fa-lightbulb"></i></div>
+            <div>
+              <h4>Innovacion constante</h4>
+              <p>Aplicamos las ultimas tendencias y metodologias en cada solucion</p>
+            </div>
+          </div>
+          <div class="about-feat">
+            <div class="about-feat-icon" style="background:#d4edda;color:#27ae60;"><i class="fa fa-handshake"></i></div>
+            <div>
+              <h4>Compromiso con el cliente</h4>
+              <p>Tu exito es nuestro exito. Acompanamos cada paso del proceso</p>
+            </div>
+          </div>
+          <div class="about-feat">
+            <div class="about-feat-icon" style="background:#dbeafe;color:#2980b9;"><i class="fa fa-chart-line"></i></div>
+            <div>
+              <h4>Resultados medibles</h4>
+              <p>Enfocados en generar impacto real y cuantificable</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="about-image">
+        <div class="about-img-card">
+          <div class="about-img-inner">
+            <i class="fa fa-rocket"></i>
+            <h3>INNOVA 506</h3>
+            <p>Innovasoluciones Empresariales S.R.L</p>
+            <div class="about-counters">
+              <div class="about-counter">
+                <div class="about-counter-num">5+</div>
+                <div class="about-counter-lbl">Anos de experiencia</div>
+              </div>
+              <div class="about-counter">
+                <div class="about-counter-num">100%</div>
+                <div class="about-counter-lbl">Costarricense</div>
+              </div>
+              <div class="about-counter">
+                <div class="about-counter-num">24/7</div>
+                <div class="about-counter-lbl">Soporte en linea</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SERVICIOS ===================== -->
+<section id="servicios">
+  <div class="section-inner">
+    <div class="section-hdr">
+      <div class="section-tag"><i class="fa fa-cogs"></i> Servicios</div>
+      <h2 class="section-title">Soluciones para cada necesidad</h2>
+      <p class="section-desc">Ofrecemos un portafolio integral de servicios disenados para impulsar el crecimiento y la competitividad de tu empresa.</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon" style="background:#fde8e3;color:var(--primary);"><i class="fa fa-graduation-cap"></i></div>
+        <h3>Capacitacion Empresarial</h3>
+        <p>Programas de formacion disenados a la medida de tu organizacion, con metodologias practicas y actualizadas para potenciar las competencias de tu equipo.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#dbeafe;color:#2980b9;"><i class="fa fa-laptop-code"></i></div>
+        <h3>Campus Virtual</h3>
+        <p>Plataforma de aprendizaje en linea con cursos interactivos, evaluaciones automatizadas y seguimiento de progreso en tiempo real.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#d4edda;color:#27ae60;"><i class="fa fa-briefcase"></i></div>
+        <h3>Asesoria Empresarial</h3>
+        <p>Consultoria estrategica para PYMES que buscan optimizar procesos, mejorar su gestion y crecer de forma sostenible en el mercado.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#fef3cd;color:#d68910;"><i class="fa fa-file-alt"></i></div>
+        <h3>Registro de PYMES</h3>
+        <p>Acompanamiento completo en el proceso de registro y formalizacion de tu pequena o mediana empresa ante las instituciones correspondientes.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#f3e8ff;color:#8b5cf6;"><i class="fa fa-chalkboard-teacher"></i></div>
+        <h3>Cursos Asincronicos</h3>
+        <p>Aprende a tu propio ritmo con nuestra oferta de cursos en linea disponibles las 24 horas, los 7 dias de la semana.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon" style="background:#fce4ec;color:#e91e63;"><i class="fa fa-certificate"></i></div>
+        <h3>Certificaciones</h3>
+        <p>Obtiene certificaciones que validan tus competencias profesionales y agregan valor a tu perfil en el mercado laboral.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CAMPUS VIRTUAL ===================== -->
+<section id="campus">
+  <div class="section-inner">
+    <div class="campus-grid">
+      <div class="campus-text">
+        <div class="section-tag"><i class="fa fa-desktop"></i> Plataforma Educativa</div>
+        <h3>Campus Virtual <span>INNOVA 506</span></h3>
+        <p>Nuestra plataforma de aprendizaje en linea ofrece una experiencia educativa completa y moderna. Accede a cursos, materiales, evaluaciones y seguimiento de progreso desde cualquier dispositivo.</p>
+        <div class="campus-features">
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Cursos organizados por semanas con contenido y evaluaciones</div>
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Cuestionarios interactivos con calificacion automatica</div>
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Entrega de tareas y retroalimentacion directa</div>
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Seguimiento de progreso y calificaciones en tiempo real</div>
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Accesible desde computadora, tablet o celular</div>
+          <div class="campus-feat"><i class="fa fa-check-circle"></i> Certificados digitales al completar cursos</div>
+        </div>
+        <a href="./campus/" class="btn-campus" target="_blank">
+          <i class="fa fa-graduation-cap"></i> Ingresar al Campus Virtual
+        </a>
+      </div>
+      <div class="campus-preview">
+        <div class="campus-preview-bar">
+          <div class="cp-dot" style="background:#ff5f57;"></div>
+          <div class="cp-dot" style="background:#febc2e;"></div>
+          <div class="cp-dot" style="background:#28c840;"></div>
+          <span style="flex:1;text-align:center;font-size:12px;color:rgba(255,255,255,0.3);">Campus INNOVA 506</span>
+        </div>
+        <div class="campus-preview-body">
+          <div class="cp-row">
+            <div class="cp-row-icon" style="background:rgba(224,78,46,0.2);color:var(--primary);"><i class="fa fa-book"></i></div>
+            <div class="cp-row-text">
+              <strong>Administracion de Empresas</strong>
+              <small>12 semanas &middot; 8 evaluaciones</small>
+            </div>
+            <span class="cp-badge" style="background:rgba(39,174,96,0.15);color:#27ae60;">Activo</span>
+          </div>
+          <div class="cp-row">
+            <div class="cp-row-icon" style="background:rgba(41,128,185,0.2);color:#2980b9;"><i class="fa fa-laptop-code"></i></div>
+            <div class="cp-row-text">
+              <strong>Marketing Digital</strong>
+              <small>8 semanas &middot; 6 evaluaciones</small>
+            </div>
+            <span class="cp-badge" style="background:rgba(39,174,96,0.15);color:#27ae60;">Activo</span>
+          </div>
+          <div class="cp-row">
+            <div class="cp-row-icon" style="background:rgba(139,92,246,0.2);color:#8b5cf6;"><i class="fa fa-chart-pie"></i></div>
+            <div class="cp-row-text">
+              <strong>Contabilidad Basica</strong>
+              <small>10 semanas &middot; 5 evaluaciones</small>
+            </div>
+            <span class="cp-badge" style="background:rgba(244,163,0,0.15);color:#f39c12;">Proximo</span>
+          </div>
+          <div class="cp-row">
+            <div class="cp-row-icon" style="background:rgba(233,30,99,0.2);color:#e91e63;"><i class="fa fa-users"></i></div>
+            <div class="cp-row-text">
+              <strong>Liderazgo y Gestion</strong>
+              <small>6 semanas &middot; 4 evaluaciones</small>
+            </div>
+            <span class="cp-badge" style="background:rgba(244,163,0,0.15);color:#f39c12;">Proximo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACTO ===================== -->
+<section id="contacto">
+  <div class="section-inner">
+    <div class="section-hdr">
+      <div class="section-tag"><i class="fa fa-envelope"></i> Contacto</div>
+      <h2 class="section-title">Hablemos de tu proyecto</h2>
+      <p class="section-desc">Estamos listos para ayudarte. Escribenos y te responderemos a la brevedad posible.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>Informacion de contacto</h3>
+        <p>Puedes comunicarte con nosotros a traves de cualquiera de los siguientes canales. Tambien puedes completar el formulario y nos pondremos en contacto contigo.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa fa-envelope"></i></div>
+            <div>
+              <h4>Correo electronico</h4>
+              <p><a href="mailto:info@innova506.org">info@innova506.org</a></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa fa-phone"></i></div>
+            <div>
+              <h4>Telefono</h4>
+              <p><a href="tel:+50600000000">+506 0000-0000</a></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fab fa-whatsapp"></i></div>
+            <div>
+              <h4>WhatsApp</h4>
+              <p><a href="https://wa.me/50600000000" target="_blank">+506 0000-0000</a></p>
+            </div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-item-icon"><i class="fa fa-map-marker-alt"></i></div>
+            <div>
+              <h4>Ubicacion</h4>
+              <p>Costa Rica</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form" id="contact-form">
+        <form onsubmit="return submitContact(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="cf-name" placeholder="Tu nombre completo" required>
+            </div>
+            <div class="form-group">
+              <label>Correo</label>
+              <input type="email" id="cf-email" placeholder="tucorreo@ejemplo.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Asunto</label>
+            <select id="cf-subject">
+              <option value="info">Informacion general</option>
+              <option value="campus">Campus Virtual</option>
+              <option value="capacitacion">Capacitacion empresarial</option>
+              <option value="asesoria">Asesoria para PYMES</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mensaje</label>
+            <textarea id="cf-msg" placeholder="Cuentanos como podemos ayudarte..." required></textarea>
+          </div>
+          <button type="submit" class="btn-submit"><i class="fa fa-paper-plane"></i> Enviar mensaje</button>
+        </form>
+        <div class="form-success" id="form-success">
+          <i class="fa fa-check-circle"></i>
+          <h4>Mensaje enviado con exito</h4>
+          <p>Gracias por contactarnos. Te responderemos pronto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3><span>INNOVA</span> 506</h3>
+        <p>Innovasoluciones Empresariales S.R.L — Impulsando el crecimiento empresarial en Costa Rica a traves de la innovacion, la capacitacion y la tecnologia.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Navegacion</h4>
+        <a href="#inicio">Inicio</a>
+        <a href="#nosotros">Nosotros</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#contacto">Contacto</a>
+      </div>
+      <div class="footer-col">
+        <h4>Servicios</h4>
+        <a href="#servicios">Capacitacion</a>
+        <a href="#campus">Campus Virtual</a>
+        <a href="#servicios">Asesoria PYMES</a>
+        <a href="#servicios">Certificaciones</a>
+      </div>
+      <div class="footer-col">
+        <h4>Campus Virtual</h4>
+        <a href="./campus/" target="_blank">Ingresar al Campus</a>
+        <a href="#campus">Cursos disponibles</a>
+        <a href="#contacto">Soporte tecnico</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 INNOVA 506 &mdash; Innovasoluciones Empresariales S.R.L. Todos los derechos reservados.</p>
+      <p>Hecho con <i class="fa fa-heart" style="color:var(--primary);"></i> en Costa Rica</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===== NAVBAR SCROLL ===== */
+window.addEventListener('scroll', function() {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+/* ===== MOBILE MENU ===== */
+function toggleMobileMenu() {
+  document.getElementById('mobile-menu').classList.toggle('active');
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').classList.remove('active');
+}
+
+/* ===== CONTACT FORM ===== */
+function submitContact(e) {
+  e.preventDefault();
+  var name = document.getElementById('cf-name').value;
+  var email = document.getElementById('cf-email').value;
+  var subject = document.getElementById('cf-subject').value;
+  var msg = document.getElementById('cf-msg').value;
+
+  /* Build mailto or WhatsApp link */
+  var body = 'Nombre: ' + name + '\nCorreo: ' + email + '\nAsunto: ' + subject + '\n\nMensaje:\n' + msg;
+  var mailtoLink = 'mailto:info@innova506.org?subject=Contacto Web - ' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  window.open(mailtoLink, '_blank');
+
+  /* Show success */
+  document.querySelector('#contact-form form').style.display = 'none';
+  document.getElementById('form-success').style.display = 'block';
+  return false;
+}
+
+/* ===== SMOOTH SCROLL for anchor links ===== */
+document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+  a.addEventListener('click', function(e) {
+    var target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  });
+});
+
+/* ===== SCROLL ANIMATIONS ===== */
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.service-card, .about-feat, .contact-item, .hero-stat').forEach(function(el) {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
