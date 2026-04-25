@@ -4,10 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Campus INNOVA 506</title>
+<meta name="description" content="Campus virtual INNOVA 506 para cursos, seguimiento, evaluaciones y calificaciones.">
+<link rel="canonical" href="https://innova506.org/campus/">
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://innova506.org/campus/">
+<meta property="og:title" content="Campus INNOVA 506">
+<meta property="og:description" content="Plataforma virtual de aprendizaje de INNOVA 506.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E04E2E'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='white'%3EI5%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <style>
 :root {
@@ -344,6 +353,11 @@ tr:last-child td { border-bottom:none; }
 .letter-row { display:grid; grid-template-columns:80px 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px; }
 .letter-row label { font-size:13px; font-weight:700; color:var(--dark); }
 .letter-row input { padding:7px 10px; border:1.5px solid var(--border); border-radius:7px; font-size:13px; }
+.form-note { font-size:11px; color:var(--muted); margin-top:6px; line-height:1.45; }
+.code-row { display:flex; gap:8px; align-items:center; }
+.code-row input { flex:1; }
+.code-row .btn { white-space:nowrap; }
+.security-callout { margin-top:12px; padding:10px 12px; border-radius:8px; background:#fff7ed; color:#7c2d12; font-size:12px; line-height:1.45; text-align:left; }
 </style>
 </head>
 <body>
@@ -355,25 +369,26 @@ tr:last-child td { border-bottom:none; }
     <div class="login-sub">Innovasoluciones Empresariales S.R.L &mdash; Plataforma Virtual</div>
 
     <div class="login-tabs">
-      <button class="login-tab active" onclick="setLoginMode('creds')">Usuario / Contraseña</button>
+      <button class="login-tab active" onclick="setLoginMode('creds')">Personal</button>
       <button class="login-tab" onclick="setLoginMode('code')">Código de acceso</button>
     </div>
 
     <div id="lm-creds">
-      <div class="fg"><label>Usuario</label><input type="text" id="l-user" placeholder="tu_usuario" autocomplete="username"></div>
-      <div class="fg"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()"></div>
+      <div class="fg"><label>Correo electrónico</label><input type="email" id="l-user" placeholder="correo@ejemplo.com" autocomplete="email"></div>
+      <div class="fg"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
     </div>
     <div id="lm-code" style="display:none">
-      <div class="fg"><label>Código de Acceso</label><input type="text" id="l-code" placeholder="INNOVA-XXXXXX" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginCode()"></div>
+      <div class="fg"><label>Código de acceso</label><input type="text" id="l-code" placeholder="INNOVA-XXXX-XXXX-XXXX" autocomplete="one-time-code" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginCode()"></div>
     </div>
 
     <button class="btn-login" onclick="loginMode==='creds'?login():loginCode()">Ingresar</button>
     <div class="login-err" id="l-err">Credenciales incorrectas. Intenta nuevamente.</div>
+    <div class="login-hint" id="login-hint">Administración y docentes ingresan con Firebase Auth. Estudiantes usan código de acceso.</div>
   </div>
 </div>
 
 <!-- ===================== APP ===================== -->
-<div id="app-main">
+<main id="app-main" role="main">
   <button class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><i class="fa fa-bars"></i></button>
   <div class="mobile-overlay" id="mobile-overlay" onclick="closeSidebar()"></div>
   <!-- SIDEBAR -->
@@ -449,7 +464,7 @@ tr:last-child td { border-bottom:none; }
       </div>
       <div class="card">
         <table>
-          <thead><tr><th>Nombre</th><th>Rol</th><th>Usuario</th><th>Código de acceso</th><th>Cursos</th><th></th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Rol</th><th>Usuario</th><th>Acceso</th><th>Cursos</th><th></th></tr></thead>
           <tbody id="students-tb"></tbody>
         </table>
       </div>
@@ -570,7 +585,7 @@ tr:last-child td { border-bottom:none; }
     </div>
 
   </div><!-- /content -->
-</div><!-- /app-main -->
+</main><!-- /app-main -->
 
 <!-- ===================== MODALS ===================== -->
 
@@ -639,19 +654,23 @@ tr:last-child td { border-bottom:none; }
       <div class="ff"><label>Correo electrónico</label><input type="email" id="sf-email" placeholder="correo@ejemplo.com"></div>
     </div>
     <div class="frow">
-      <div class="ff"><label>Usuario *</label><input type="text" id="sf-user" placeholder="juan.perez"></div>
-      <div class="ff"><label>Contraseña *</label><input type="password" id="sf-pass" placeholder="Mínimo 6 caracteres"></div>
+      <div class="ff"><label>Usuario interno</label><input type="text" id="sf-user" placeholder="Se genera si queda vacío"></div>
+      <div class="ff"><label>Tipo de acceso</label><div class="form-note" id="sf-auth-note">El estudiante ingresa con código. No se guardan contraseñas en el campus.</div><input type="hidden" id="sf-pass"></div>
     </div>
-    <div class="ff"><label>Código de Acceso <small>(se genera automáticamente)</small></label>
-      <input type="text" id="sf-code" oninput="this.value=this.value.toUpperCase()">
+    <div class="ff" id="sf-code-wrap"><label>Código de Acceso <small>(aleatorio y revocable)</small></label>
+      <div class="code-row">
+        <input type="text" id="sf-code" oninput="this.value=this.value.toUpperCase()">
+        <button type="button" class="btn btn-outline btn-sm" onclick="regenerateAccessCode('sf-code')"><i class="fa fa-sync-alt"></i> Generar</button>
+      </div>
+      <div class="form-note">Compártelo solo con la persona estudiante. Usa 12 caracteres aleatorios para evitar códigos predecibles.</div>
     </div>
+    <div class="security-callout"><i class="fa fa-shield-alt"></i> Para docentes, crea también la cuenta en Firebase Authentication con el mismo correo. No se almacenará contraseña aquí.</div>
     <div class="mft">
       <button class="btn btn-outline" onclick="closeModal('m-student')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveStudent()"><i class="fa fa-user-plus"></i> Registrar</button>
     </div>
   </div>
 </div>
-
 <!-- Modal: Material -->
 <div class="mbk" id="m-material">
   <div class="modal">
@@ -820,23 +839,28 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Editar Estudiante -->
 <div class="mbk" id="m-edit-student">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title">Editar Estudiante</div><button class="mclose" onclick="closeModal('m-edit-student')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title">Editar Usuario</div><button class="mclose" onclick="closeModal('m-edit-student')">&times;</button></div>
     <div class="frow">
       <div class="ff"><label>Nombre Completo *</label><input type="text" id="edf-name" placeholder="Juan Pérez García"></div>
       <div class="ff"><label>Correo electrónico</label><input type="email" id="edf-email" placeholder="correo@ejemplo.com"></div>
     </div>
     <div class="frow">
-      <div class="ff"><label>Usuario *</label><input type="text" id="edf-user" placeholder="juan.perez"></div>
-      <div class="ff"><label>Contraseña *</label><input type="text" id="edf-pass" placeholder="contraseña"></div>
+      <div class="ff"><label>Usuario interno</label><input type="text" id="edf-user" placeholder="Se genera si queda vacío"></div>
+      <div class="ff"><label>Tipo de acceso</label><div class="form-note" id="edf-auth-note">Sin contraseña almacenada en el campus.</div><input type="hidden" id="edf-pass"></div>
     </div>
-    <div class="ff"><label>Código de Acceso</label><input type="text" id="edf-code" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="ff" id="edf-code-wrap"><label>Código de Acceso</label>
+      <div class="code-row">
+        <input type="text" id="edf-code" oninput="this.value=this.value.toUpperCase()">
+        <button type="button" class="btn btn-outline btn-sm" onclick="regenerateAccessCode('edf-code')"><i class="fa fa-sync-alt"></i> Generar</button>
+      </div>
+    </div>
+    <div class="security-callout"><i class="fa fa-shield-alt"></i> Admin y docentes entran con Firebase Auth usando su correo. Estudiantes entran con su código.</div>
     <div class="mft">
       <button class="btn btn-outline" onclick="closeModal('m-edit-student')">Cancelar</button>
       <button class="btn btn-primary" onclick="saveEditStudent()"><i class="fa fa-save"></i> Guardar Cambios</button>
     </div>
   </div>
 </div>
-
 <!-- Modal: Progreso del Estudiante -->
 <div class="mbk" id="m-student-progress">
   <div class="modal modal-lg">
@@ -875,6 +899,7 @@ const _firebaseConfig = {
 };
 
 let _fbdb = null;
+let _fbauth = null;
 const _cache = {};
 
 const DB = {
@@ -884,6 +909,8 @@ const DB = {
     if (_fbdb) {
       _fbdb.collection('lms').doc(k).set({ value: JSON.stringify(v) })
         .catch(e => console.warn('Firebase sync error:', e));
+    } else {
+      try { localStorage.setItem('i506_'+k, JSON.stringify(v)); } catch(e) { console.warn('localStorage sync error:', e); }
     }
   }
 };
@@ -891,7 +918,7 @@ const DB = {
 function initDB() {
   if (DB.get('init')) return;
   DB.set('users',[
-    {id:'u1',name:'Jason Chaves Bastos',username:'admin',password:'innova506',role:'admin',email:'innova506@hotmail.com',accessCode:''}
+    {id:'u1',name:'Jason Chaves Bastos',username:'jason.chaves',role:'admin',email:'innova506@hotmail.com',accessCode:'',authProvider:'firebase-auth'}
   ]);
   DB.set('courses',[
     {id:'c1',title:'Lean Six Sigma Yellow Belt',cat:'Lean Six Sigma',desc:'Aprende las técnicas de mejora de procesos de la metodología Lean Six Sigma.',dur:40,emoji:'📊',materials:[],quizzes:[],assignments:[]},
@@ -910,6 +937,10 @@ function initDB() {
 async function startApp() {
   try {
     firebase.initializeApp(_firebaseConfig);
+    if (firebase.auth) {
+      _fbauth = firebase.auth();
+      _fbauth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(e => console.warn('Auth persistence warning:', e));
+    }
     _fbdb = firebase.firestore();
     const snap = await _fbdb.collection('lms').get();
     snap.forEach(doc => {
@@ -933,6 +964,68 @@ async function startApp() {
 let me = null;
 let loginMode = 'creds';
 
+const ADMIN_EMAIL = 'innova506@hotmail.com';
+
+function normalizeEmail(email) { return String(email||'').trim().toLowerCase(); }
+function normalizeAccessCode(code) { return String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function randomCodePart(len) {
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out='';
+  const values = new Uint32Array(len);
+  if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(values);
+  for (let i=0;i<len;i++) {
+    const n = values[i] || Math.floor(Math.random()*chars.length);
+    out += chars[n % chars.length];
+  }
+  return out;
+}
+function makeAccessCode() { return `INNOVA-${randomCodePart(4)}-${randomCodePart(4)}-${randomCodePart(4)}`; }
+function isStrongAccessCode(code) { return /^INNOVA-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(String(code||'')); }
+function regenerateAccessCode(fieldId) { document.getElementById(fieldId).value = makeAccessCode(); }
+function makeUsername(name, users, currentId) {
+  const base = String(name||'usuario').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.|\.$/g,'') || 'usuario';
+  let candidate = base, n = 2;
+  while ((users||[]).some(u => u.id!==currentId && u.username===candidate)) candidate = `${base}${n++}`;
+  return candidate;
+}
+async function ensureAnonymousSession() {
+  if (!_fbauth) return null;
+  if (_fbauth.currentUser) return _fbauth.currentUser;
+  try { return (await _fbauth.signInAnonymously()).user; }
+  catch(e) { console.warn('Anonymous auth no disponible; el código funcionará solo con reglas abiertas/compatibilidad:', e); return null; }
+}
+function staffProfileForAuth(authUser, email) {
+  const users = DB.get('users')||[];
+  let user = users.find(x => normalizeEmail(x.email)===email && (x.role==='admin'||x.role==='teacher'));
+  if (!user && email===ADMIN_EMAIL) {
+    user = {id:'u1',name:'Jason Chaves Bastos',username:'jason.chaves',role:'admin',email:ADMIN_EMAIL,accessCode:'',authProvider:'firebase-auth'};
+    users.push(user);
+  }
+  if (user && authUser) {
+    user.authUid = authUser.uid;
+    user.email = authUser.email || email;
+    user.authProvider = 'firebase-auth';
+    delete user.password;
+    DB.set('users', users);
+  }
+  return user;
+}
+function applySecurityMigration() {
+  const users = DB.get('users')||[];
+  let changed=false;
+  users.forEach(u => {
+    if ('password' in u) { delete u.password; changed=true; }
+    if (u.role==='student') {
+      if (!isStrongAccessCode(u.accessCode)) { u.accessCode = makeAccessCode(); changed=true; }
+      if (u.authProvider!=='access-code') { u.authProvider='access-code'; changed=true; }
+    } else if (u.role==='admin' || u.role==='teacher') {
+      if (u.accessCode) { u.accessCode=''; changed=true; }
+      if (u.authProvider!=='firebase-auth') { u.authProvider='firebase-auth'; changed=true; }
+    }
+  });
+  if (changed) { DB.set('users',users); toast('Migración de seguridad aplicada: contraseñas locales eliminadas y códigos reforzados.'); }
+}
+
 function setLoginMode(m) {
   loginMode = m;
   document.querySelectorAll('.login-tab').forEach((t,i) => t.classList.toggle('active',(m==='creds'&&i===0)||(m==='code'&&i===1)));
@@ -940,23 +1033,35 @@ function setLoginMode(m) {
   document.getElementById('lm-code').style.display  = m==='code' ?'block':'none';
 }
 
-function login() {
-  const u = document.getElementById('l-user').value.trim();
-  const p = document.getElementById('l-pass').value.trim();
-  const user = (DB.get('users')||[]).find(x=>x.username===u&&x.password===p);
-  user ? onLogin(user) : showErr();
+async function login() {
+  const email = normalizeEmail(document.getElementById('l-user').value);
+  const p = document.getElementById('l-pass').value;
+  if (!email || !p) { showErr('Ingresa correo y contraseña.'); return; }
+  if (!_fbauth) { showErr('Firebase Auth no está disponible. Revisa la configuración del proyecto.'); return; }
+  try {
+    const cred = await _fbauth.signInWithEmailAndPassword(email,p);
+    const user = staffProfileForAuth(cred.user,email);
+    if (!user) { await _fbauth.signOut(); showErr('Este correo no está registrado como admin o docente.'); return; }
+    onLogin(user);
+  } catch(e) {
+    console.warn('Login Firebase Auth error:', e);
+    showErr('No se pudo ingresar. Verifica correo, contraseña y que la cuenta exista en Firebase Auth.');
+  }
 }
 
-function loginCode() {
-  const code = document.getElementById('l-code').value.trim();
-  const user = (DB.get('users')||[]).find(x=>x.accessCode===code&&(x.role==='student'||x.role==='teacher'));
-  user ? onLogin(user) : showErr();
+async function loginCode() {
+  const codeNorm = normalizeAccessCode(document.getElementById('l-code').value);
+  if (!codeNorm) { showErr('Ingresa tu código de acceso.'); return; }
+  await ensureAnonymousSession();
+  const user = (DB.get('users')||[]).find(x=>x.role==='student' && normalizeAccessCode(x.accessCode)===codeNorm && !x.disabled);
+  user ? onLogin(user) : showErr('Código incorrecto, vencido o no asignado.');
 }
 
-function showErr() {
+function showErr(msg) {
   const el = document.getElementById('l-err');
+  el.textContent = msg || 'No pudimos validar el acceso. Intenta nuevamente.';
   el.style.display='block';
-  setTimeout(()=>el.style.display='none',3000);
+  setTimeout(()=>el.style.display='none',4500);
 }
 
 function onLogin(user) {
@@ -965,18 +1070,20 @@ function onLogin(user) {
   document.getElementById('app-main').classList.add('active');
   document.getElementById('sb-name').textContent = user.name;
   buildNav(user.role);
-  if (user.role==='admin') { showView('v-adash'); renderAdminDash(); }
+  if (user.role==='admin') { applySecurityMigration(); showView('v-adash'); renderAdminDash(); }
   else if (user.role==='teacher') { showView('v-tcourses'); renderTeacherCourses(); }
   else { showView('v-sdash'); renderStudentDash(); }
 }
 
 function logout() {
   clearQuizTimer();
+  if (_fbauth && _fbauth.currentUser) _fbauth.signOut().catch(e=>console.warn('Auth signOut error:', e));
   me = null;
   document.getElementById('app-main').classList.remove('active');
   document.getElementById('app-login').style.display='flex';
   document.getElementById('l-user').value='';
   document.getElementById('l-pass').value='';
+  document.getElementById('l-code').value='';
 }
 
 // ─── Navigation ───────────────────────────────────────────────
@@ -1766,7 +1873,7 @@ function renderStudentsTb() {
       <td><strong>${s.name}</strong><br><small style="color:var(--muted)">${s.email||''}</small></td>
       <td><span class="badge ${isT?'b-blue':'b-gray'}">${isT?'Docente':'Estudiante'}</span></td>
       <td>${s.username}</td>
-      <td><span class="badge b-blue">${s.accessCode||'—'}</span></td>
+      <td><span class="badge b-blue">${isT?'Firebase Auth':(s.accessCode||'Pendiente')}</span></td>
       <td>${enrolls.filter(e=>e.sid===s.id).length}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         ${!isT?`<button class="btn btn-outline btn-sm" onclick="openStudentProgress('${s.id}')"><i class="fa fa-chart-line"></i> Progreso</button>`:''}
@@ -1813,19 +1920,28 @@ let _newUserRole='student';
 function openStudentModal(role) {
   _newUserRole=role||'student';
   ['sf-name','sf-email','sf-user','sf-pass'].forEach(x=>document.getElementById(x).value='');
-  document.getElementById('sf-code').value='INNOVA-'+Date.now().toString().slice(-6);
+  const isStudent=_newUserRole==='student';
+  document.getElementById('sf-code').value=isStudent?makeAccessCode():'';
+  document.getElementById('sf-code-wrap').style.display=isStudent?'block':'none';
+  document.getElementById('sf-auth-note').textContent=isStudent?'El estudiante ingresa con código. No se guardan contraseñas en el campus.':'El docente ingresa con Firebase Auth usando su correo. Crea esa cuenta en Firebase Authentication.';
   document.querySelector('#m-student .mhd-title').textContent=_newUserRole==='teacher'?'Agregar Docente':'Agregar Estudiante';
   openModal('m-student');
 }
 function saveStudent() {
   const name=document.getElementById('sf-name').value.trim();
-  const username=document.getElementById('sf-user').value.trim();
-  const password=document.getElementById('sf-pass').value.trim();
-  if (!name||!username||!password) { toast('Nombre, usuario y contraseña son requeridos','err'); return; }
+  const email=normalizeEmail(document.getElementById('sf-email').value);
   const users=DB.get('users')||[];
-  if (users.some(u=>u.username===username)) { toast('Ese usuario ya existe','err'); return; }
-  users.push({id:'u'+Date.now(),name,username,password,role:_newUserRole,email:document.getElementById('sf-email').value,accessCode:document.getElementById('sf-code').value});
-  DB.set('users',users); closeModal('m-student'); renderStudentsTb(); toast(_newUserRole==='teacher'?'Docente registrado':'Estudiante registrado');
+  const username=(document.getElementById('sf-user').value.trim()||makeUsername(name,users));
+  if (!name) { toast('Nombre es requerido','err'); return; }
+  if (_newUserRole==='teacher' && !email) { toast('El correo del docente es requerido para Firebase Auth','err'); return; }
+  if (username && users.some(u=>u.username===username)) { toast('Ese usuario ya existe','err'); return; }
+  const data={id:'u'+Date.now(),name,username,role:_newUserRole,email,accessCode:'',authProvider:_newUserRole==='teacher'?'firebase-auth':'access-code'};
+  if (_newUserRole==='student') {
+    data.accessCode=document.getElementById('sf-code').value.trim()||makeAccessCode();
+    if (!isStrongAccessCode(data.accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
+  }
+  users.push(data);
+  DB.set('users',users); closeModal('m-student'); renderStudentsTb(); toast(_newUserRole==='teacher'?'Docente registrado. Crea su cuenta en Firebase Auth.':'Estudiante registrado con código seguro');
 }
 function filterStudents(q) {
   const qLow=q.toLowerCase();
@@ -1845,24 +1961,31 @@ function openEditStudent(id) {
   const u=(DB.get('users')||[]).find(x=>x.id===id);
   if (!u) return;
   editStudentId = id;
+  const isStudent=u.role==='student';
   document.getElementById('edf-name').value = u.name||'';
   document.getElementById('edf-email').value = u.email||'';
   document.getElementById('edf-user').value = u.username||'';
-  document.getElementById('edf-pass').value = u.password||'';
+  document.getElementById('edf-pass').value = '';
   document.getElementById('edf-code').value = u.accessCode||'';
+  document.getElementById('edf-code-wrap').style.display=isStudent?'block':'none';
+  document.getElementById('edf-auth-note').textContent=isStudent?'El estudiante ingresa con código. Puedes regenerarlo si se comparte por error.':'Admin/docente ingresa con Firebase Auth. La contraseña se gestiona fuera del campus.';
   openModal('m-edit-student');
 }
 function saveEditStudent() {
   const name=document.getElementById('edf-name').value.trim();
-  const username=document.getElementById('edf-user').value.trim();
-  const password=document.getElementById('edf-pass').value.trim();
-  if (!name||!username||!password) { toast('Nombre, usuario y contraseña son requeridos','err'); return; }
+  const email=normalizeEmail(document.getElementById('edf-email').value);
   const users=DB.get('users')||[];
   const idx=users.findIndex(u=>u.id===editStudentId);
   if (idx<0) return;
+  const username=(document.getElementById('edf-user').value.trim()||makeUsername(name,users,editStudentId));
+  if (!name) { toast('Nombre es requerido','err'); return; }
+  if ((users[idx].role==='admin'||users[idx].role==='teacher') && !email) { toast('El correo es requerido para Firebase Auth','err'); return; }
   if (users.some((u,i)=>u.username===username&&i!==idx)) { toast('Ese usuario ya existe','err'); return; }
-  users[idx]={...users[idx],name,username,password,email:document.getElementById('edf-email').value.trim(),accessCode:document.getElementById('edf-code').value.trim()};
-  DB.set('users',users); closeModal('m-edit-student'); renderStudentsTb(); toast('Estudiante actualizado');
+  const accessCode=users[idx].role==='student'?(document.getElementById('edf-code').value.trim()||makeAccessCode()):'';
+    if (users[idx].role==='student' && !isStrongAccessCode(accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
+  users[idx]={...users[idx],name,username,email,accessCode,authProvider:users[idx].role==='student'?'access-code':'firebase-auth'};
+  delete users[idx].password;
+  DB.set('users',users); closeModal('m-edit-student'); renderStudentsTb(); toast('Usuario actualizado');
 }
 
 // ─── Admin Grades ─────────────────────────────────────────────
@@ -2192,7 +2315,7 @@ function renderSCMaterial(el,c,m) {
     el.innerHTML=`<div class="card">
       <div class="card-title" style="margin-bottom:14px"><i class="fa fa-play-circle" style="color:var(--success)"></i> ${m.title}</div>
       ${vid?`<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe></div>`
-           :`<a href="${m.url}" target="_blank" class="btn btn-success"><i class="fa fa-external-link-alt"></i> Ver video</a>`}
+           :`<a href="${m.url}" target="_blank" rel="noopener noreferrer" class="btn btn-success"><i class="fa fa-external-link-alt"></i> Ver video</a>`}
     </div>`;
   } else if (m.type==='pdf') {
     let embedUrl=m.url; const dm=m.url.match(/\/file\/d\/([^/]+)/);
@@ -2200,7 +2323,7 @@ function renderSCMaterial(el,c,m) {
     el.innerHTML=`<div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div class="card-title"><i class="fa fa-file-pdf" style="color:var(--primary)"></i> ${m.title}</div>
-        <a href="${m.url}" target="_blank" class="btn btn-primary btn-sm"><i class="fa fa-external-link-alt"></i> Abrir</a>
+        <a href="${m.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm"><i class="fa fa-external-link-alt"></i> Abrir</a>
       </div>
       <iframe src="${embedUrl}" style="width:100%;height:520px;border:none;border-radius:8px;background:#f5f5f5" allowfullscreen></iframe>
     </div>`;

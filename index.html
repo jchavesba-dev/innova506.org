@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INNOVA 506 | Innovasoluciones Empresariales</title>
 <meta name="description" content="INNOVA 506 - Soluciones empresariales, capacitación y campus virtual para el desarrollo profesional en Costa Rica.">
+<link rel="canonical" href="https://innova506.org/">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://innova506.org/">
+<meta property="og:title" content="INNOVA 506 | Innovasoluciones Empresariales">
+<meta property="og:description" content="Soluciones empresariales, capacitacion y campus virtual para el desarrollo profesional en Costa Rica.">
+<meta property="og:site_name" content="INNOVA 506">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="INNOVA 506 | Innovasoluciones Empresariales">
+<meta name="twitter:description" content="Soluciones empresariales, capacitacion y campus virtual para el desarrollo profesional en Costa Rica.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E04E2E'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='white'%3EI5%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 /* ===== VARIABLES ===== */
@@ -374,7 +385,8 @@ section { padding:100px 24px; }
   section { padding:60px 16px; }
   .about-counters { grid-template-columns:1fr; }
 }
-</style>
+.hp-field { position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden; }
+.form-error { display:none; margin-top:14px; padding:12px 14px; border-radius:8px; background:#fde8e3; color:#7b1c0a; font-size:14px; font-weight:600; }</style>
 </head>
 <body>
 
@@ -391,7 +403,7 @@ section { padding:100px 24px; }
       <li><a href="#servicios">Servicios</a></li>
       <li><a href="#campus">Campus Virtual</a></li>
       <li><a href="#contacto">Contacto</a></li>
-      <li><a href="./campus/" class="nav-cta" target="_blank"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a></li>
+      <li><a href="./campus/" class="nav-cta" target="_blank" rel="noopener noreferrer"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a></li>
     </ul>
     <button class="hamburger-web" onclick="toggleMobileMenu()" aria-label="Menu"><i class="fa fa-bars"></i></button>
   </div>
@@ -407,10 +419,12 @@ section { padding:100px 24px; }
       <a href="#servicios" onclick="closeMobileMenu()">Servicios</a>
       <a href="#campus" onclick="closeMobileMenu()">Campus Virtual</a>
       <a href="#contacto" onclick="closeMobileMenu()">Contacto</a>
-      <a href="./campus/" class="nav-cta" target="_blank"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a>
+      <a href="./campus/" class="nav-cta" target="_blank" rel="noopener noreferrer"><i class="fa fa-graduation-cap"></i> Ingresar al Campus</a>
     </div>
   </div>
 </div>
+
+<main id="contenido-principal">
 
 <!-- ===================== HERO ===================== -->
 <section class="hero" id="inicio">
@@ -573,7 +587,7 @@ section { padding:100px 24px; }
           <div class="campus-feat"><i class="fa fa-check-circle"></i> Accesible desde computadora, tablet o celular</div>
           <div class="campus-feat"><i class="fa fa-check-circle"></i> Certificados digitales al completar cursos</div>
         </div>
-        <a href="./campus/" class="btn-campus" target="_blank">
+        <a href="./campus/" class="btn-campus" target="_blank" rel="noopener noreferrer">
           <i class="fa fa-graduation-cap"></i> Ingresar al Campus Virtual
         </a>
       </div>
@@ -654,7 +668,7 @@ section { padding:100px 24px; }
             <div class="contact-item-icon"><i class="fab fa-whatsapp"></i></div>
             <div>
               <h4>WhatsApp</h4>
-              <p><a href="https://wa.me/50688575092" target="_blank">+506 8857-5092</a></p>
+              <p><a href="https://wa.me/50688575092" target="_blank" rel="noopener noreferrer">+506 8857-5092</a></p>
             </div>
           </div>
           <div class="contact-item">
@@ -668,6 +682,10 @@ section { padding:100px 24px; }
       </div>
       <div class="contact-form" id="contact-form">
         <form onsubmit="return submitContact(event)">
+          <div class="hp-field" aria-hidden="true">
+            <label for="cf-honey">Empresa</label>
+            <input type="text" id="cf-honey" name="_honey" tabindex="-1" autocomplete="off">
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label>Nombre</label>
@@ -694,7 +712,8 @@ section { padding:100px 24px; }
           </div>
           <button type="submit" class="btn-submit"><i class="fa fa-paper-plane"></i> Enviar mensaje</button>
         </form>
-        <div class="form-success" id="form-success">
+        <div class="form-error" id="form-error" role="alert" aria-live="polite"></div>
+        <div class="form-success" id="form-success" role="status" aria-live="polite">
           <i class="fa fa-check-circle"></i>
           <h4>Mensaje enviado con éxito</h4>
           <p>Gracias por contactarnos. Te responderemos pronto.</p>
@@ -704,6 +723,8 @@ section { padding:100px 24px; }
   </div>
 </section>
 
+</main>
+
 <!-- ===================== FOOTER ===================== -->
 <footer class="footer">
   <div class="footer-inner">
@@ -712,9 +733,9 @@ section { padding:100px 24px; }
         <h3><span>INNOVA</span> 506</h3>
         <p>Innovasoluciones Empresariales S.R.L — Impulsando el crecimiento empresarial en Costa Rica a través de la innovación, la capacitación y la tecnología.</p>
         <div class="footer-social">
-          <a href="https://www.facebook.com/share/18DkvCJP3q/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://www.linkedin.com/company/innova506/" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-          <a href="https://wa.me/50688575092" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://www.facebook.com/share/18DkvCJP3q/" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.linkedin.com/company/innova506/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://wa.me/50688575092" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
         </div>
       </div>
       <div class="footer-col">
@@ -733,7 +754,7 @@ section { padding:100px 24px; }
       </div>
       <div class="footer-col">
         <h4>Campus Virtual</h4>
-        <a href="./campus/" target="_blank">Ingresar al Campus</a>
+        <a href="./campus/" target="_blank" rel="noopener noreferrer">Ingresar al Campus</a>
         <a href="#campus">Cursos disponibles</a>
         <a href="#contacto">Soporte técnico</a>
       </div>
@@ -760,14 +781,35 @@ function closeMobileMenu() {
 }
 
 /* ===== CONTACT FORM ===== */
+function showContactError(message) {
+  var err = document.getElementById('form-error');
+  if (!err) { alert(message); return; }
+  err.textContent = message;
+  err.style.display = 'block';
+}
+function clearContactError() {
+  var err = document.getElementById('form-error');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+}
 function submitContact(e) {
   e.preventDefault();
-  var name = document.getElementById('cf-name').value;
-  var email = document.getElementById('cf-email').value;
+  clearContactError();
+
+  var honey = document.getElementById('cf-honey');
+  if (honey && honey.value.trim() !== '') return false;
+
+  var name = document.getElementById('cf-name').value.trim();
+  var email = document.getElementById('cf-email').value.trim();
   var subjectText = document.getElementById('cf-subject').options[document.getElementById('cf-subject').selectedIndex].text;
-  var msg = document.getElementById('cf-msg').value;
+  var msg = document.getElementById('cf-msg').value.trim();
+
+  if (name.length < 2) { showContactError('Ingresa tu nombre completo.'); return false; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showContactError('Ingresa un correo electronico valido.'); return false; }
+  if (msg.length < 10) { showContactError('Cuentanos un poco mas para poder ayudarte mejor.'); return false; }
 
   var btn = document.querySelector('.btn-submit');
+  if (btn.dataset.sending === '1') return false;
+  btn.dataset.sending = '1';
   btn.disabled = true;
   btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enviando...';
 
@@ -779,7 +821,9 @@ function submitContact(e) {
       email: email,
       message: msg,
       _subject: 'Nuevo mensaje desde innova506.org - ' + subjectText,
-      _template: 'table'
+      _template: 'table',
+      _captcha: 'false',
+      _honey: honey ? honey.value : ''
     })
   })
   .then(function(res) { return res.json(); })
@@ -788,14 +832,13 @@ function submitContact(e) {
       document.querySelector('#contact-form form').style.display = 'none';
       document.getElementById('form-success').style.display = 'block';
     } else {
-      alert('Error al enviar. Intenta de nuevo.');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Enviar mensaje';
+      throw new Error('Formsubmit no confirmo el envio.');
     }
   })
   .catch(function() {
-    alert('Error de conexión. Intenta de nuevo.');
+    showContactError('No pudimos enviar el mensaje en este momento. Intenta de nuevo o escribenos por WhatsApp.');
     btn.disabled = false;
+    btn.dataset.sending = '0';
     btn.innerHTML = '<i class="fa fa-paper-plane"></i> Enviar mensaje';
   });
   return false;

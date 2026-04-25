@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://innova506.org/sitemap.xml

@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid));
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/userProfiles/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return hasProfile() && profile().data.role == 'admin';
+    }
+
+    function isTeacher() {
+      return hasProfile() && profile().data.role == 'teacher';
+    }
+
+    function isStudent() {
+      return hasProfile() && profile().data.role == 'student';
+    }
+
+    function isTeacherAssigned(courseId) {
+      return isTeacher() && exists(/databases/$(database)/documents/courses/$(courseId)/teachers/$(request.auth.uid));
+    }
+
+    function isStudentEnrolled(courseId) {
+      return isStudent() && exists(/databases/$(database)/documents/courses/$(courseId)/enrollments/$(request.auth.uid));
+    }
+
+    // Legacy collection used by the current single-file LMS. Keep this admin-only
+    // after migrating data to the normalized collections below.
+    match /lms/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /userProfiles/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /accessCodes/{codeId} {
+      allow get: if signedIn() && resource.data.active == true;
+      allow list: if false;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAdmin() || isTeacherAssigned(courseId) || isStudentEnrolled(courseId);
+      allow create, update, delete: if isAdmin() || isTeacherAssigned(courseId);
+
+      match /teachers/{uid} {
+        allow read: if isAdmin() || request.auth.uid == uid || isTeacherAssigned(courseId);
+        allow write: if isAdmin();
+      }
+
+      match /enrollments/{uid} {
+        allow read: if isAdmin() || isTeacherAssigned(courseId) || request.auth.uid == uid;
+        allow write: if isAdmin();
+      }
+
+      match /progress/{uid} {
+        allow read: if isAdmin() || isTeacherAssigned(courseId) || request.auth.uid == uid;
+        allow create, update: if isAdmin() || request.auth.uid == uid;
+        allow delete: if isAdmin();
+      }
+
+      match /submissions/{submissionId} {
+        allow read: if isAdmin() || isTeacherAssigned(courseId) || resource.data.studentUid == request.auth.uid;
+        allow create: if isStudentEnrolled(courseId) && request.resource.data.studentUid == request.auth.uid;
+        allow update: if isAdmin() || isTeacherAssigned(courseId);
+        allow delete: if isAdmin();
+      }
+
+      match /grades/{gradeId} {
+        allow read: if isAdmin() || isTeacherAssigned(courseId) || resource.data.studentUid == request.auth.uid;
+        allow create, update, delete: if isAdmin() || isTeacherAssigned(courseId);
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
