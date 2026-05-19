@@ -36,7 +36,14 @@
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; }
-body { font-family:var(--font); color:var(--dark); line-height:1.6; background:var(--white); }
+body {
+  font-family:var(--font); color:var(--dark); line-height:1.6; background:var(--white);
+  -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
+  -webkit-touch-callout:none;
+}
+/* Permitir seleccion solo en inputs y formularios */
+input, textarea, select { -webkit-user-select:text; -moz-user-select:text; -ms-user-select:text; user-select:text; }
+img { -webkit-user-drag:none; user-drag:none; pointer-events:auto; }
 
 /* ===== NAVBAR ===== */
 .navbar {
@@ -767,6 +774,50 @@ section { padding:100px 24px; }
 </footer>
 
 <script>
+/* ===== SEGURIDAD: Bloquear inspeccion del codigo ===== */
+(function() {
+  // Bloquear clic derecho
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // Bloquear teclas: F12, Ctrl+U, Ctrl+Shift+I/J/C, Ctrl+S
+  document.addEventListener('keydown', function(e) {
+    // F12
+    if (e.keyCode === 123) { e.preventDefault(); return false; }
+    // Ctrl+U (Ver fuente)
+    if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; }
+    // Ctrl+S (Guardar pagina)
+    if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); return false; }
+    // Ctrl+Shift+I (DevTools)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) { e.preventDefault(); return false; }
+    // Ctrl+Shift+J (Console)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 74) { e.preventDefault(); return false; }
+    // Ctrl+Shift+C (Inspector)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 67) { e.preventDefault(); return false; }
+    // Ctrl+Shift+K (Console Firefox)
+    if (e.ctrlKey && e.shiftKey && e.keyCode === 75) { e.preventDefault(); return false; }
+  });
+
+  // Bloquear arrastrar imagenes
+  document.addEventListener('dragstart', function(e) {
+    if (e.target.tagName === 'IMG') { e.preventDefault(); return false; }
+  });
+
+  // Detectar DevTools abiertas (anchura inusual)
+  setInterval(function() {
+    if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#E04E2E;text-align:center;padding:20px;"><div><h1 style="font-size:48px;margin-bottom:10px;">🔒</h1><h2>Acceso restringido</h2><p style="color:#666;margin-top:10px;">Por favor cierra las herramientas de desarrollador para continuar.</p></div></div>';
+    }
+  }, 1000);
+
+  // Mensaje en la consola
+  console.log('%c⚠ ALTO!', 'color:#E04E2E;font-size:50px;font-weight:bold;');
+  console.log('%cEsta es una funcion del navegador destinada a desarrolladores. El acceso no autorizado a este sitio esta prohibido.', 'color:#333;font-size:14px;');
+  console.log('%c© INNOVA 506 - Innovasoluciones Empresariales S.R.L', 'color:#666;font-size:12px;');
+})();
+
 /* ===== NAVBAR SCROLL ===== */
 window.addEventListener('scroll', function() {
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
