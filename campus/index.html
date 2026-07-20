@@ -913,13 +913,6 @@ tr:last-child td { border-bottom:none; }
     if (e.ctrlKey && e.shiftKey && e.keyCode === 75) { e.preventDefault(); return false; } // Ctrl+Shift+K
   });
 
-  // Detectar DevTools abiertas
-  setInterval(function() {
-    if (window.outerWidth - window.innerWidth > 200 || window.outerHeight - window.innerHeight > 200) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#E04E2E;text-align:center;padding:20px;background:#2C2C2C;"><div><h1 style="font-size:60px;margin-bottom:10px;">🔒</h1><h2 style="color:white;">Acceso restringido</h2><p style="color:rgba(255,255,255,0.6);margin-top:10px;">Por favor cierra las herramientas de desarrollador para continuar.</p><p style="color:rgba(255,255,255,0.4);margin-top:20px;font-size:12px;">Campus INNOVA 506</p></div></div>';
-    }
-  }, 1000);
-
   // Mensaje en la consola
   console.log('%c⚠ ALTO!', 'color:#E04E2E;font-size:50px;font-weight:bold;');
   console.log('%cAcceso no autorizado a esta plataforma esta prohibido y sera registrado.', 'color:#333;font-size:14px;');
