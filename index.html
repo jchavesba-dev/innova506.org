@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -293,7 +293,7 @@
     </nav>
   </header>
 
-  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+  <div class="mobile-menu" id="mobile-menu" hidden>
     <a href="#firma">La firma <i class="fa-solid fa-arrow-right"></i></a>
     <a href="#soluciones">Soluciones <i class="fa-solid fa-arrow-right"></i></a>
     <a href="#formacion">Formación <i class="fa-solid fa-arrow-right"></i></a>
@@ -433,7 +433,7 @@
     const header=document.getElementById('header');
     const menuButton=document.getElementById('menu-button');
     const mobileMenu=document.getElementById('mobile-menu');
-    function setMenu(open){mobileMenu.classList.toggle('open',open);mobileMenu.setAttribute('aria-hidden',String(!open));menuButton.setAttribute('aria-expanded',String(open));menuButton.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú');menuButton.innerHTML=open?'<i class="fa-solid fa-xmark"></i>':'<i class="fa-solid fa-bars"></i>';document.body.classList.toggle('menu-open',open)}
+    function setMenu(open){mobileMenu.classList.toggle('open',open);mobileMenu.hidden=!open;menuButton.setAttribute('aria-expanded',String(open));menuButton.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú');menuButton.innerHTML=open?'<i class="fa-solid fa-xmark"></i>':'<i class="fa-solid fa-bars"></i>';document.body.classList.toggle('menu-open',open)}
     menuButton.addEventListener('click',()=>setMenu(!mobileMenu.classList.contains('open')));
     mobileMenu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>setMenu(false)));
     window.addEventListener('scroll',()=>header.classList.toggle('scrolled',window.scrollY>12),{passive:true});

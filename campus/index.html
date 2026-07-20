@@ -11,7 +11,11 @@
 <meta property="og:url" content="https://innova506.org/campus/">
 <meta property="og:title" content="Campus INNOVA 506">
 <meta property="og:description" content="Plataforma virtual de aprendizaje de INNOVA 506.">
+<meta name="theme-color" content="#0a0a0a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23E04E2E'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial,sans-serif' font-size='24' font-weight='700' fill='white'%3EI5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -365,41 +369,335 @@ tr:last-child td { border-bottom:none; }
 .code-row .btn { white-space:nowrap; }
 .security-callout { margin-top:12px; padding:10px 12px; border-radius:8px; background:#fff7ed; color:#7c2d12; font-size:12px; line-height:1.45; text-align:left; }
 </style>
+<style>
+/* ===== IDENTIDAD VISUAL INNOVA 506 · 2026 ===== */
+:root {
+  --primary:#ef522f;
+  --primary-dark:#cf3e1d;
+  --dark:#101010;
+  --sidebar:#0b0b0b;
+  --white:#fff;
+  --light:#f4f3f0;
+  --paper:#f7f6f3;
+  --border:#e6e3de;
+  --success:#178653;
+  --info:#256d91;
+  --muted:#73716d;
+  --radius:18px;
+  --shadow:0 14px 40px rgba(17,17,17,.07);
+}
+
+html { scroll-behavior:smooth; }
+body {
+  font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:var(--dark); background:var(--paper); line-height:1.5;
+  -webkit-user-select:auto; -moz-user-select:auto; -ms-user-select:auto; user-select:auto;
+  -webkit-touch-callout:default;
+}
+button,input,select,textarea { font:inherit; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {
+  outline:3px solid rgba(239,82,47,.28); outline-offset:2px;
+}
+
+/* Acceso */
+#app-login {
+  min-height:100svh; padding:20px; background:#090909; position:relative; overflow:hidden;
+}
+#app-login::before {
+  content:''; position:absolute; width:560px; height:560px; right:-260px; top:-280px;
+  border:1px solid rgba(239,82,47,.28); border-radius:50%; box-shadow:0 0 0 90px rgba(239,82,47,.035);
+}
+.login-shell {
+  position:relative; z-index:1; width:min(1280px,100%); min-height:calc(100svh - 40px);
+  display:grid; grid-template-columns:minmax(0,1.15fr) minmax(440px,.85fr);
+  border:1px solid rgba(255,255,255,.12); border-radius:28px; overflow:hidden;
+  background:#fff; box-shadow:0 32px 90px rgba(0,0,0,.38);
+}
+.login-showcase {
+  min-height:680px; padding:46px 50px; color:#fff; display:flex; flex-direction:column; justify-content:space-between;
+  position:relative; isolation:isolate;
+  background-image:linear-gradient(115deg,rgba(7,7,7,.97) 0%,rgba(7,7,7,.82) 47%,rgba(7,7,7,.35) 100%),url('../hero-innova506-v2.webp');
+  background-size:cover; background-position:center;
+}
+.login-showcase::after {
+  content:''; position:absolute; inset:auto 0 0; height:48%; z-index:-1;
+  background:linear-gradient(transparent,rgba(0,0,0,.62));
+}
+.login-home { display:inline-flex; width:190px; text-decoration:none; }
+.login-home img { width:100%; height:auto; filter:brightness(0) invert(1); }
+.showcase-copy { max-width:670px; padding:60px 0; }
+.showcase-eyebrow {
+  display:inline-flex; align-items:center; gap:10px; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.17em; color:rgba(255,255,255,.72); margin-bottom:22px;
+}
+.showcase-eyebrow::before { content:''; width:34px; height:2px; background:var(--primary); }
+.showcase-copy h1 {
+  max-width:650px; font-family:'Manrope',sans-serif; font-size:clamp(42px,5.4vw,76px);
+  line-height:.99; letter-spacing:-.055em; font-weight:700;
+}
+.showcase-copy h1 em { color:var(--primary); font-style:normal; }
+.showcase-copy p { max-width:510px; margin-top:24px; color:rgba(255,255,255,.72); font-size:17px; line-height:1.7; }
+.showcase-footer { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid rgba(255,255,255,.16); }
+.showcase-point { padding:20px 18px 4px 0; border-right:1px solid rgba(255,255,255,.16); }
+.showcase-point:last-child { border-right:0; padding-left:18px; }
+.showcase-point:nth-child(2) { padding-left:18px; }
+.showcase-point strong { display:block; font-family:'Manrope',sans-serif; font-size:14px; }
+.showcase-point span { display:block; margin-top:3px; color:rgba(255,255,255,.5); font-size:11px; }
+.login-panel { display:flex; align-items:center; justify-content:center; padding:44px; background:#fff; }
+.login-card {
+  width:100%; max-width:440px; padding:0; border-radius:0; box-shadow:none; text-align:left; background:transparent;
+}
+.login-card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:52px; }
+.login-status {
+  display:inline-flex; align-items:center; gap:8px; color:#625f5b; font-size:11px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.09em;
+}
+.login-status::before { content:''; width:8px; height:8px; border-radius:50%; background:#22a066; box-shadow:0 0 0 4px rgba(34,160,102,.12); }
+.login-back { color:#686561; font-size:12px; font-weight:600; text-decoration:none; }
+.login-back:hover { color:var(--primary); }
+.login-wordmark { display:block; width:min(280px,80%); height:auto; margin-bottom:34px; }
+.login-brand {
+  font-family:'Manrope',sans-serif; color:var(--dark); font-size:30px; font-weight:700; letter-spacing:-.035em;
+}
+.login-brand span { color:var(--dark); }
+.login-sub { margin:8px 0 30px; font-size:14px; color:var(--muted); }
+.login-tabs { padding:4px; border:0; border-radius:12px; margin-bottom:25px; background:#f1f0ed; }
+.login-tab { padding:10px 12px; border-radius:9px; color:#76736f; font-size:12px; }
+.login-tab.active { color:#fff; background:#111; box-shadow:0 6px 18px rgba(0,0,0,.12); }
+.fg { margin-bottom:17px; }
+.fg label { margin-bottom:7px; color:#343330; font-size:12px; letter-spacing:.01em; }
+.fg input {
+  padding:13px 15px; border:1px solid #dcd9d3; border-radius:11px; background:#fff; color:#111;
+}
+.fg input:hover { border-color:#bbb7b0; }
+.fg input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(239,82,47,.09); }
+.btn-login {
+  margin-top:3px; padding:14px 18px; border-radius:11px; background:var(--primary); font-size:14px;
+  box-shadow:0 12px 28px rgba(239,82,47,.22);
+}
+.btn-login:hover { background:var(--primary-dark); transform:translateY(-1px); }
+.login-err { padding:10px 12px; border-radius:9px; background:#fff1ef; }
+.login-hint { margin-top:18px; padding-top:18px; border-top:1px solid var(--border); color:#85817b; line-height:1.55; }
+.login-security { display:flex; align-items:center; gap:8px; margin-top:15px; color:#aaa6a0; font-size:10px; }
+
+/* Aplicación */
+#app-main { background:var(--paper); }
+#app-main.active { align-items:stretch; }
+.sidebar {
+  width:250px; min-height:100vh; height:100vh; position:sticky; top:0; overflow-y:auto;
+  background:var(--sidebar); border-right:1px solid rgba(255,255,255,.08);
+}
+.sb-brand { min-height:104px; padding:26px 22px 22px; display:block; border-bottom:1px solid rgba(255,255,255,.1); }
+.sb-logo { display:block; width:174px; max-width:100%; filter:brightness(0) invert(1); }
+.sb-brand-text { margin-top:10px; color:rgba(255,255,255,.46); font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; }
+.sb-brand-text span { display:none; }
+.sb-user { padding:18px 22px; border-bottom:1px solid rgba(255,255,255,.1); }
+.sb-user small { color:rgba(255,255,255,.42); font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+.sb-user strong { margin-top:5px; color:#fff; font-family:'Manrope',sans-serif; font-size:14px; }
+.sb-nav { padding:16px 10px; }
+.nav-sec { padding:14px 12px 7px; color:rgba(255,255,255,.3); font-size:9px; letter-spacing:.15em; }
+.nav-it {
+  gap:11px; margin:3px 0; padding:11px 12px; border:0; border-radius:10px;
+  color:rgba(255,255,255,.59); font-size:13px;
+}
+.nav-it i { width:18px; color:rgba(255,255,255,.4); }
+.nav-it:hover { background:rgba(255,255,255,.07); color:#fff; }
+.nav-it:hover i { color:var(--primary); }
+.nav-it.active { background:var(--primary); color:#fff; border:0; box-shadow:0 8px 20px rgba(239,82,47,.18); }
+.nav-it.active i { color:#fff; }
+.sb-footer { padding:16px; border-top:1px solid rgba(255,255,255,.1); }
+.btn-logout { padding:10px 12px; border-color:rgba(255,255,255,.12); border-radius:10px; text-align:left; }
+.btn-logout:hover { border-color:rgba(255,255,255,.28); }
+.content { min-width:0; background:var(--paper); }
+.view { width:100%; max-width:1500px; margin:0 auto; padding:38px 42px 60px; }
+.ph { margin-bottom:26px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+.ph-left .ph-title { font-family:'Manrope',sans-serif; font-size:clamp(24px,2.2vw,34px); font-weight:700; letter-spacing:-.035em; }
+.ph-left .ph-sub { margin-top:5px; color:#7b7873; font-size:13px; }
+
+/* Componentes */
+.stats { grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:24px; }
+.stat { padding:22px; border:1px solid var(--border); border-radius:18px; box-shadow:none; }
+.stat-icon { width:42px; height:42px; border-radius:12px; }
+.stat-val { margin-top:3px; font-family:'Manrope',sans-serif; font-size:32px; letter-spacing:-.04em; }
+.stat-lbl { color:#817e79; font-size:11px; text-transform:uppercase; letter-spacing:.07em; }
+.card,.qcard,.cfg-section {
+  border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); background:#fff;
+}
+.card { padding:22px; }
+.card-hd { margin-bottom:18px; }
+.card-title { font-family:'Manrope',sans-serif; font-size:15px; font-weight:700; }
+.btn { border-radius:10px; padding:9px 15px; font-weight:600; }
+.btn-sm { padding:6px 11px; }
+.btn-primary { background:var(--primary); box-shadow:0 7px 18px rgba(239,82,47,.16); }
+.btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); }
+.btn-dark { background:#111; }
+.btn-outline { background:#fff; border:1px solid #d9d6d0; }
+.btn-outline:hover { background:#fff8f6; border-color:var(--primary); }
+.btn-success { background:var(--success); }
+table { font-size:13px; }
+th { padding:11px 13px; color:#817e79; border-bottom:1px solid var(--border); background:#faf9f7; }
+td { padding:13px; border-bottom:1px solid #ece9e4; }
+tbody tr:hover td { background:#fbfaf8; }
+.badge { padding:4px 10px; }
+.b-orange { background:#fff0ec; color:#bd3518; }
+.ff label { margin-bottom:7px; color:#373532; }
+.ff input,.ff select,.ff textarea,.cfg-item input,.cfg-item select,.letter-row input {
+  padding:10px 13px; border:1px solid #dcd9d3; border-radius:10px; background:#fff;
+}
+.ff input:focus,.ff select:focus,.ff textarea:focus,.cfg-item input:focus,.cfg-item select:focus {
+  border-color:var(--primary); box-shadow:0 0 0 4px rgba(239,82,47,.08);
+}
+.cgrid { grid-template-columns:repeat(auto-fill,minmax(285px,1fr)); gap:18px; }
+.cc { border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 28px rgba(17,17,17,.06); }
+.cc:hover { transform:translateY(-4px); box-shadow:0 18px 42px rgba(17,17,17,.11); }
+.cc-head { height:112px; background-color:#111 !important; position:relative; }
+.cc-head::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,transparent,rgba(239,82,47,.22)); }
+.cc-head > * { position:relative; z-index:1; }
+.cc-body { padding:19px; }
+.cc-title { font-family:'Manrope',sans-serif; font-size:16px; }
+.pbar { height:6px; background:#ece9e4; }
+.tabs { gap:8px; border-bottom:1px solid var(--border); }
+.tab { padding:11px 14px; font-size:13px; }
+.tab.active { color:var(--primary-dark); }
+.mat-item,.content-item { border:1px solid var(--border); border-radius:12px; }
+.content-item:hover { border-color:#d2cec7; box-shadow:0 8px 20px rgba(17,17,17,.05); }
+.section-banner { border-radius:16px; padding:24px 26px; }
+.section-banner-title { font-family:'Manrope',sans-serif; }
+.sc-layout { min-height:calc(100vh - 190px); border:1px solid var(--border); border-radius:18px; box-shadow:var(--shadow); }
+.sc-nav-panel { width:245px; min-width:245px; border-right:1px solid var(--border); background:#f7f6f3; }
+.sc-nav-item { padding:11px 15px; font-size:13px; border-left-width:2px; }
+.sc-nav-item.active { color:var(--primary-dark); background:#fff; }
+.sc-content-area { padding:28px; }
+.modal { border:1px solid rgba(0,0,0,.06); border-radius:20px; box-shadow:0 28px 80px rgba(0,0,0,.22); }
+.mbk { background:rgba(6,6,6,.72); backdrop-filter:blur(5px); }
+.mhd-title { font-family:'Manrope',sans-serif; letter-spacing:-.02em; }
+.mclose { border-radius:9px; }
+.toast { right:22px; bottom:22px; border-radius:12px; box-shadow:0 18px 44px rgba(0,0,0,.2); }
+.gb-wrap { border:1px solid var(--border); box-shadow:var(--shadow); }
+.gb-table th,.gb-table th.gb-name { background:#161616; }
+.emoji-trigger,.emoji-panel,.import-box { border-color:var(--border); }
+.security-callout { border:1px solid #f1d9c9; background:#fff8f2; }
+
+/* Carga */
+#app-loading {
+  background-image:linear-gradient(115deg,rgba(5,5,5,.96),rgba(5,5,5,.78)),url('../hero-innova506-v2.webp') !important;
+  background-size:cover !important; background-position:center !important;
+}
+.loading-card { width:min(420px,calc(100% - 36px)); padding:38px; border:1px solid rgba(255,255,255,.15); border-radius:20px; background:rgba(12,12,12,.76); backdrop-filter:blur(14px); }
+.loading-logo { width:220px; max-width:80%; filter:brightness(0) invert(1); margin:0 auto 24px; }
+.loading-title { font-family:'Manrope',sans-serif; font-size:21px; }
+.loading-copy { margin:7px 0 22px; color:rgba(255,255,255,.6); font-size:12px; }
+.loading-spinner { width:34px; height:34px; margin:0 auto; border:2px solid rgba(255,255,255,.2); border-top-color:var(--primary); border-radius:50%; animation:spin .75s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+@media (max-width:980px) {
+  #app-login { padding:12px; }
+  .login-shell { min-height:calc(100svh - 24px); grid-template-columns:1fr 430px; }
+  .login-showcase { padding:38px 34px; }
+  .showcase-copy h1 { font-size:50px; }
+  .login-panel { padding:34px; }
+}
+@media (max-width:780px) {
+  #app-login { padding:0; background:#fff; }
+  #app-login::before { display:none; }
+  .login-shell { min-height:100svh; display:block; border:0; border-radius:0; box-shadow:none; }
+  .login-showcase { min-height:285px; padding:28px 24px; justify-content:flex-end; background-position:62% center; }
+  .login-home { position:absolute; top:25px; left:24px; width:156px; }
+  .showcase-copy { padding:64px 0 0; }
+  .showcase-eyebrow { margin-bottom:12px; }
+  .showcase-copy h1 { max-width:520px; font-size:clamp(34px,10vw,50px); }
+  .showcase-copy p,.showcase-footer { display:none; }
+  .login-panel { padding:32px 24px 42px; }
+  .login-card-top { margin-bottom:32px; }
+  .login-wordmark { width:220px; margin-bottom:26px; }
+  .login-brand { font-size:26px; }
+  .sidebar { width:250px; left:-260px; position:fixed; top:0; height:100vh; z-index:800; transition:left .25s ease; }
+  .sidebar.open { left:0; }
+  .hamburger { display:flex; top:14px; left:14px; width:44px; height:44px; border-radius:12px; background:#111; }
+  .view { padding:68px 18px 40px; }
+  .ph { align-items:flex-start; }
+  .ph-left .ph-title { font-size:25px; }
+  .frow { grid-template-columns:1fr; }
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .stat { padding:17px; }
+  .stat-val { font-size:27px; }
+  .card { overflow-x:auto; }
+  .sc-layout { flex-direction:column; min-height:auto; }
+  .sc-nav-panel { width:100%; min-width:0; max-height:240px; border-right:0; border-bottom:1px solid var(--border); }
+  .sc-content-area { padding:18px; }
+}
+@media (max-width:480px) {
+  .login-showcase { min-height:250px; }
+  .login-card-top { gap:14px; }
+  .login-status { font-size:9px; }
+  .login-back { font-size:11px; }
+  .stats { grid-template-columns:1fr; }
+  .cgrid { grid-template-columns:1fr; }
+  .modal { padding:22px 18px; }
+}
+</style>
 </head>
 <body>
 
 <!-- ===================== LOGIN ===================== -->
 <div id="app-login">
-  <div class="login-card">
-    <div class="login-brand"><span>INNOVA 506</span> Campus</div>
-    <div class="login-sub">Innovasoluciones Empresariales S.R.L &mdash; Plataforma Virtual</div>
+  <div class="login-shell">
+    <section class="login-showcase" aria-labelledby="campus-title">
+      <a class="login-home" href="../" aria-label="Ir al sitio principal de INNOVA 506">
+        <img src="../logo-innova506.png" alt="INNOVA 506">
+      </a>
+      <div class="showcase-copy">
+        <div class="showcase-eyebrow">Campus Virtual · Costa Rica</div>
+        <h1 id="campus-title">Aprendizaje que se convierte en <em>resultados.</em></h1>
+        <p>Un espacio diseñado para desarrollar capacidades, acompañar el progreso y transformar conocimiento en impacto real.</p>
+      </div>
+      <div class="showcase-footer" role="group" aria-label="Características de la plataforma">
+        <div class="showcase-point"><strong>Formación aplicada</strong><span>Contenido orientado a la práctica</span></div>
+        <div class="showcase-point"><strong>Progreso visible</strong><span>Seguimiento claro y continuo</span></div>
+        <div class="showcase-point"><strong>Acceso seguro</strong><span>Experiencia privada y confiable</span></div>
+      </div>
+    </section>
 
-    <div class="login-tabs">
-      <button class="login-tab active" onclick="setLoginMode('creds')">Personal</button>
-      <button class="login-tab" onclick="setLoginMode('code')">Código de acceso</button>
-    </div>
+    <div class="login-panel">
+      <div class="login-card">
+        <div class="login-card-top">
+          <span class="login-status">Plataforma disponible</span>
+          <a class="login-back" href="../">Sitio principal <i class="fa fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+        </div>
+        <img class="login-wordmark" src="../logo-innova506.png" alt="INNOVA 506">
+        <div class="login-brand"><span>Bienvenido al</span> Campus</div>
+        <div class="login-sub">Ingrese con sus credenciales o con el código proporcionado por INNOVA 506.</div>
 
-    <div id="lm-creds">
-      <div class="fg"><label>Correo electrónico</label><input type="email" id="l-user" placeholder="correo@ejemplo.com" autocomplete="email"></div>
-      <div class="fg"><label>Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
-    </div>
-    <div id="lm-code" style="display:none">
-      <div class="fg"><label>Código de acceso</label><input type="text" id="l-code" placeholder="INNOVA-XXXX-XXXX-XXXX" autocomplete="one-time-code" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginCode()"></div>
-    </div>
+        <div class="login-tabs" role="tablist" aria-label="Tipo de acceso">
+          <button type="button" class="login-tab active" onclick="setLoginMode('creds')" role="tab">Personal</button>
+          <button type="button" class="login-tab" onclick="setLoginMode('code')" role="tab">Código de acceso</button>
+        </div>
 
-    <button class="btn-login" onclick="loginMode==='creds'?login():loginCode()">Ingresar</button>
-    <div class="login-err" id="l-err">Credenciales incorrectas. Intenta nuevamente.</div>
-    <div class="login-hint" id="login-hint">Administración y docentes ingresan con Firebase Auth. Estudiantes usan código de acceso.</div>
+        <div id="lm-creds">
+          <div class="fg"><label for="l-user">Correo electrónico</label><input type="email" id="l-user" placeholder="correo@ejemplo.com" autocomplete="email"></div>
+          <div class="fg"><label for="l-pass">Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
+        </div>
+        <div id="lm-code" style="display:none">
+          <div class="fg"><label for="l-code">Código de acceso</label><input type="text" id="l-code" placeholder="INNOVA-XXXX-XXXX-XXXX" autocomplete="one-time-code" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')loginCode()"></div>
+        </div>
+
+        <button type="button" class="btn-login" onclick="loginMode==='creds'?login():loginCode()">Ingresar al Campus</button>
+        <div class="login-err" id="l-err" role="alert">Credenciales incorrectas. Intente nuevamente.</div>
+        <div class="login-hint" id="login-hint">Administración y docentes ingresan con Firebase Auth. Estudiantes usan código de acceso.</div>
+        <div class="login-security"><i class="fa fa-shield-halved" aria-hidden="true"></i> Sus datos de acceso se procesan mediante una conexión segura.</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- ===================== APP ===================== -->
-<main id="app-main" role="main">
-  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><i class="fa fa-bars"></i></button>
+<main id="app-main">
+  <button type="button" class="hamburger" onclick="toggleSidebar()" aria-label="Menú"><i class="fa fa-bars"></i></button>
   <div class="mobile-overlay" id="mobile-overlay" onclick="closeSidebar()"></div>
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-brand">
+      <img class="sb-logo" src="../logo-innova506.png" alt="INNOVA 506">
       <div class="sb-brand-text"><span>INNOVA 506</span>Campus Virtual</div>
     </div>
     <div class="sb-user">
@@ -408,7 +706,7 @@ tr:last-child td { border-bottom:none; }
     </div>
     <nav class="sb-nav" id="sb-nav"></nav>
     <div class="sb-footer">
-      <button class="btn-logout" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Cerrar sesión</button>
+      <button type="button" class="btn-logout" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Cerrar sesión</button>
     </div>
   </div>
 
@@ -431,7 +729,7 @@ tr:last-child td { border-bottom:none; }
     <div class="view" id="v-acourses">
       <div class="ph">
         <div class="ph-left"><div class="ph-title">Gestión de Cursos</div><div class="ph-sub">Crea y administra los cursos del campus</div></div>
-        <button class="btn btn-primary" onclick="openCourseModal()"><i class="fa fa-plus"></i> Nuevo Curso</button>
+        <button type="button" class="btn btn-primary" onclick="openCourseModal()"><i class="fa fa-plus"></i> Nuevo Curso</button>
       </div>
       <div class="cgrid" id="acourses-grid"></div>
     </div>
@@ -440,7 +738,7 @@ tr:last-child td { border-bottom:none; }
     <div class="view" id="v-editor">
       <div class="ph">
         <div class="ph-left" style="display:flex;align-items:center;gap:12px">
-          <button class="btn btn-outline btn-sm" onclick="editorBack()"><i class="fa fa-arrow-left"></i></button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="editorBack()"><i class="fa fa-arrow-left"></i></button>
           <div><div class="ph-title" id="editor-title">Curso</div><div class="ph-sub">Contenido · Calificaciones · Estudiantes</div></div>
         </div>
       </div>
@@ -457,16 +755,12 @@ tr:last-child td { border-bottom:none; }
       <div class="ph">
         <div class="ph-left"><div class="ph-title">Usuarios</div><div class="ph-sub">Estudiantes y Docentes</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="openStudentModal('student')"><i class="fa fa-user-plus"></i> Agregar Estudiante</button>
-          <button class="btn btn-primary" style="background:#5b6abf" onclick="openStudentModal('teacher')"><i class="fa fa-chalkboard-teacher"></i> Agregar Docente</button>
+          <button type="button" class="btn btn-primary" onclick="openStudentModal('student')"><i class="fa fa-user-plus"></i> Agregar Estudiante</button>
+          <button type="button" class="btn btn-primary" style="background:#5b6abf" onclick="openStudentModal('teacher')"><i class="fa fa-chalkboard-teacher"></i> Agregar Docente</button>
         </div>
       </div>
       <div style="margin-bottom:16px;max-width:420px">
-        <input type="text" id="student-search" placeholder="🔍 Buscar por nombre o usuario..."
-          style="width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:.2s"
-          oninput="filterStudents(this.value)"
-          onfocus="this.style.borderColor='var(--primary)'"
-          onblur="this.style.borderColor='var(--border)'">
+        <input type="text" id="student-search" placeholder="🔍 Buscar por nombre o usuario..." style="width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:.2s" oninput="filterStudents(this.value)" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
       </div>
       <div class="card">
         <table>
@@ -481,8 +775,8 @@ tr:last-child td { border-bottom:none; }
       <div class="ph">
         <div class="ph-left"><div class="ph-title">Calificaciones</div><div class="ph-sub">Cuestionarios y tareas por estudiante</div></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-success" onclick="exportGradesCSV()"><i class="fa fa-file-excel"></i> Exportar Excel</button>
-          <button class="btn btn-dark" onclick="exportGeneralPDF()"><i class="fa fa-file-pdf"></i> Reporte General PDF</button>
+          <button type="button" class="btn btn-success" onclick="exportGradesCSV()"><i class="fa fa-file-excel"></i> Exportar Excel</button>
+          <button type="button" class="btn btn-dark" onclick="exportGeneralPDF()"><i class="fa fa-file-pdf"></i> Reporte General PDF</button>
         </div>
       </div>
       <div class="tabs" id="agrades-tabs">
@@ -511,7 +805,7 @@ tr:last-child td { border-bottom:none; }
     <div class="view" id="v-scourse">
       <div class="ph">
         <div class="ph-left" style="display:flex;align-items:center;gap:12px">
-          <button class="btn btn-outline btn-sm" onclick="showView('v-sdash');renderStudentDash()"><i class="fa fa-arrow-left"></i></button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="showView('v-sdash');renderStudentDash()"><i class="fa fa-arrow-left"></i></button>
           <div><div class="ph-title" id="sc-title">Curso</div><div class="ph-sub" id="sc-sub"></div></div>
         </div>
       </div>
@@ -533,7 +827,7 @@ tr:last-child td { border-bottom:none; }
     <div class="view" id="v-squiz">
       <div class="ph">
         <div class="ph-left" style="display:flex;align-items:center;gap:12px">
-          <button class="btn btn-outline btn-sm" id="quiz-back"><i class="fa fa-arrow-left"></i></button>
+          <button type="button" class="btn btn-outline btn-sm" id="quiz-back"><i class="fa fa-arrow-left"></i></button>
           <div><div class="ph-title" id="quiz-name">Cuestionario</div><div class="ph-sub" id="quiz-info"></div></div>
         </div>
       </div>
@@ -575,13 +869,13 @@ tr:last-child td { border-bottom:none; }
         <div class="card-hd"><span class="card-title"><i class="fa fa-database" style="color:var(--primary)"></i> Gestión de Respaldo</span></div>
         <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.7">Exporta todos los datos del campus (cursos, estudiantes, calificaciones, inscripciones) como un archivo JSON. Puedes restaurarlos importando ese mismo archivo.</p>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <button class="btn btn-primary" style="justify-content:center;padding:14px" onclick="exportBackup()">
+          <button type="button" class="btn btn-primary" style="justify-content:center;padding:14px" onclick="exportBackup()">
             <i class="fa fa-download"></i> Exportar Respaldo (JSON)
           </button>
           <div style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center">
             <p style="font-size:13px;color:var(--muted);margin-bottom:12px"><i class="fa fa-upload" style="font-size:20px;display:block;margin-bottom:8px;opacity:.4"></i>Selecciona un archivo de respaldo (.json) para restaurar los datos</p>
             <input type="file" id="backup-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
-            <button class="btn btn-outline" onclick="document.getElementById('backup-file-input').click()">
+            <button type="button" class="btn btn-outline" onclick="document.getElementById('backup-file-input').click()">
               <i class="fa fa-folder-open"></i> Seleccionar archivo de respaldo
             </button>
           </div>
@@ -598,7 +892,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Curso -->
 <div class="mbk" id="m-course">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title" id="mcourse-title">Nuevo Curso</div><button class="mclose" onclick="closeModal('m-course')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title" id="mcourse-title">Nuevo Curso</div><button type="button" class="mclose" onclick="closeModal('m-course')">×</button></div>
     <div class="frow">
       <div class="ff"><label>Título *</label><input type="text" id="cf-title" placeholder="Lean Six Sigma Yellow Belt"></div>
       <div class="ff"><label>Categoría</label>
@@ -645,8 +939,8 @@ tr:last-child td { border-bottom:none; }
       </div>
     </div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-course')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveCourse()"><i class="fa fa-save"></i> Guardar</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-course')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveCourse()"><i class="fa fa-save"></i> Guardar</button>
     </div>
   </div>
 </div>
@@ -654,7 +948,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Estudiante -->
 <div class="mbk" id="m-student">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title">Agregar Estudiante</div><button class="mclose" onclick="closeModal('m-student')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title">Agregar Estudiante</div><button type="button" class="mclose" onclick="closeModal('m-student')">×</button></div>
     <div class="frow">
       <div class="ff"><label>Nombre Completo *</label><input type="text" id="sf-name" placeholder="Juan Pérez García"></div>
       <div class="ff"><label>Correo electrónico</label><input type="email" id="sf-email" placeholder="correo@ejemplo.com"></div>
@@ -672,15 +966,15 @@ tr:last-child td { border-bottom:none; }
     </div>
     <div class="security-callout"><i class="fa fa-shield-alt"></i> Para docentes, crea también la cuenta en Firebase Authentication con el mismo correo. No se almacenará contraseña aquí.</div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-student')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveStudent()"><i class="fa fa-user-plus"></i> Registrar</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-student')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveStudent()"><i class="fa fa-user-plus"></i> Registrar</button>
     </div>
   </div>
 </div>
 <!-- Modal: Material -->
 <div class="mbk" id="m-material">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title">Agregar Material</div><button class="mclose" onclick="closeModal('m-material')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title">Agregar Material</div><button type="button" class="mclose" onclick="closeModal('m-material')">×</button></div>
     <div class="ff"><label>Tipo</label>
       <select id="mf-type" onchange="toggleMatFields()">
         <option value="section">📌 Separador de Semana / Sección</option>
@@ -714,8 +1008,8 @@ tr:last-child td { border-bottom:none; }
     <div class="ff" id="mf-txt-wrap" style="display:none"><label>Contenido *</label><textarea id="mf-txt" style="min-height:120px" placeholder="Escribe el contenido de la lectura..."></textarea></div>
     <div class="ff" id="mf-html-wrap" style="display:none"><label>Código HTML *</label><textarea id="mf-html" style="min-height:160px;font-family:monospace;font-size:13px" placeholder="&lt;h2&gt;Título&lt;/h2&gt;&lt;p&gt;Contenido...&lt;/p&gt;"></textarea></div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-material')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMaterial()"><i class="fa fa-plus"></i> Agregar</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-material')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveMaterial()"><i class="fa fa-plus"></i> Agregar</button>
     </div>
   </div>
 </div>
@@ -723,7 +1017,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Cuestionario -->
 <div class="mbk" id="m-quiz">
   <div class="modal modal-lg">
-    <div class="mhd"><div class="mhd-title" id="mquiz-title">Crear Cuestionario</div><button class="mclose" onclick="closeModal('m-quiz')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title" id="mquiz-title">Crear Cuestionario</div><button type="button" class="mclose" onclick="closeModal('m-quiz')">×</button></div>
     <div class="ff"><label>Título del cuestionario *</label><input type="text" id="qf-title" placeholder="Evaluación Módulo 1"></div>
 
     <!-- Quiz settings: timer, attempts, shuffle -->
@@ -789,10 +1083,10 @@ tr:last-child td { border-bottom:none; }
     </div>
 
     <div id="q-container"></div>
-    <button class="btn btn-outline" onclick="addQuestion()" style="width:100%;justify-content:center;margin-top:8px"><i class="fa fa-plus"></i> Agregar pregunta manualmente</button>
+    <button type="button" class="btn btn-outline" onclick="addQuestion()" style="width:100%;justify-content:center;margin-top:8px"><i class="fa fa-plus"></i> Agregar pregunta manualmente</button>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-quiz')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveQuiz()"><i class="fa fa-save"></i> Guardar Cuestionario</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-quiz')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveQuiz()"><i class="fa fa-save"></i> Guardar Cuestionario</button>
     </div>
   </div>
 </div>
@@ -800,7 +1094,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Tarea -->
 <div class="mbk" id="m-assign">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title" id="massign-title">Crear Tarea</div><button class="mclose" onclick="closeModal('m-assign')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title" id="massign-title">Crear Tarea</div><button type="button" class="mclose" onclick="closeModal('m-assign')">×</button></div>
     <div class="ff"><label>Título *</label><input type="text" id="af-title" placeholder="Tarea 1: Análisis de proceso"></div>
     <div class="ff"><label>Instrucciones *</label><textarea id="af-desc" style="min-height:100px" placeholder="Describe qué debe hacer el estudiante..."></textarea></div>
     <div class="frow">
@@ -816,8 +1110,8 @@ tr:last-child td { border-bottom:none; }
       <i class="fa fa-info-circle"></i> Si se activa el bloqueo, los estudiantes no podrán entregar después de la fecha. Podés forzar apertura desde el editor del curso.
     </div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-assign')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveAssignment()"><i class="fa fa-plus"></i> Guardar Tarea</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-assign')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveAssignment()"><i class="fa fa-plus"></i> Guardar Tarea</button>
     </div>
   </div>
 </div>
@@ -825,7 +1119,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Calificar Tarea -->
 <div class="mbk" id="m-grade-assign">
   <div class="modal modal-lg">
-    <div class="mhd"><div class="mhd-title" id="mga-title">Calificar Tarea</div><button class="mclose" onclick="closeModal('m-grade-assign')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title" id="mga-title">Calificar Tarea</div><button type="button" class="mclose" onclick="closeModal('m-grade-assign')">×</button></div>
     <div style="margin-bottom:14px;padding:10px 14px;background:var(--light);border-radius:9px;font-size:13px;color:var(--muted)" id="mga-meta"></div>
     <div class="ff"><label>Respuesta del estudiante</label>
       <textarea id="mga-txt" readonly style="min-height:120px;background:#fafafa;color:#555"></textarea></div>
@@ -836,8 +1130,8 @@ tr:last-child td { border-bottom:none; }
         <textarea id="mga-feedback" placeholder="Comentarios para el estudiante..."></textarea></div>
     </div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-grade-assign')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveAssignGrade()"><i class="fa fa-save"></i> Guardar Calificación</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-grade-assign')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveAssignGrade()"><i class="fa fa-save"></i> Guardar Calificación</button>
     </div>
   </div>
 </div>
@@ -845,7 +1139,7 @@ tr:last-child td { border-bottom:none; }
 <!-- Modal: Editar Estudiante -->
 <div class="mbk" id="m-edit-student">
   <div class="modal">
-    <div class="mhd"><div class="mhd-title">Editar Usuario</div><button class="mclose" onclick="closeModal('m-edit-student')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title">Editar Usuario</div><button type="button" class="mclose" onclick="closeModal('m-edit-student')">×</button></div>
     <div class="frow">
       <div class="ff"><label>Nombre Completo *</label><input type="text" id="edf-name" placeholder="Juan Pérez García"></div>
       <div class="ff"><label>Correo electrónico</label><input type="email" id="edf-email" placeholder="correo@ejemplo.com"></div>
@@ -862,63 +1156,37 @@ tr:last-child td { border-bottom:none; }
     </div>
     <div class="security-callout"><i class="fa fa-shield-alt"></i> Admin y docentes entran con Firebase Auth usando su correo. Estudiantes entran con su código.</div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-edit-student')">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveEditStudent()"><i class="fa fa-save"></i> Guardar Cambios</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-edit-student')">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="saveEditStudent()"><i class="fa fa-save"></i> Guardar Cambios</button>
     </div>
   </div>
 </div>
 <!-- Modal: Progreso del Estudiante -->
 <div class="mbk" id="m-student-progress">
   <div class="modal modal-lg">
-    <div class="mhd"><div class="mhd-title" id="msp-title">Progreso del Estudiante</div><button class="mclose" onclick="closeModal('m-student-progress')">&times;</button></div>
+    <div class="mhd"><div class="mhd-title" id="msp-title">Progreso del Estudiante</div><button type="button" class="mclose" onclick="closeModal('m-student-progress')">×</button></div>
     <div id="msp-body"></div>
     <div class="mft">
-      <button class="btn btn-outline" onclick="closeModal('m-student-progress')">Cerrar</button>
+      <button type="button" class="btn btn-outline" onclick="closeModal('m-student-progress')">Cerrar</button>
     </div>
   </div>
 </div>
 
 <!-- Loading overlay -->
-<div id="app-loading" style="position:fixed;inset:0;background:linear-gradient(135deg,#2C2C2C 0%,#3A3A3A 60%,#E04E2E 100%);display:flex;align-items:center;justify-content:center;z-index:9999;">
-  <div style="text-align:center;color:white;">
-    <div style="font-size:52px;margin-bottom:18px;">🔥</div>
-    <div style="font-size:22px;font-weight:800;margin-bottom:8px;">Campus INNOVA 506</div>
-    <div style="font-size:14px;opacity:0.7;margin-bottom:20px;">Conectando con la base de datos...</div>
-    <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+<div id="app-loading" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div class="loading-card" style="text-align:center;color:white;">
+    <img class="loading-logo" src="../logo-innova506.png" alt="INNOVA 506">
+    <div class="loading-title">Preparando su Campus</div>
+    <div class="loading-copy">Conectando de forma segura con la plataforma...</div>
+    <div class="loading-spinner" aria-hidden="true"></div>
   </div>
 </div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <!-- Toast -->
 <div class="toast" id="toast-el"></div>
 
 <!-- ===================== SCRIPT ===================== -->
 <script>
-/* ===== SEGURIDAD: Bloquear inspeccion del codigo ===== */
-(function() {
-  // Bloquear clic derecho
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-  });
-
-  // Bloquear teclas peligrosas
-  document.addEventListener('keydown', function(e) {
-    if (e.keyCode === 123) { e.preventDefault(); return false; } // F12
-    if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; } // Ctrl+U
-    if (e.ctrlKey && e.keyCode === 83) { e.preventDefault(); return false; } // Ctrl+S
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 73) { e.preventDefault(); return false; } // Ctrl+Shift+I
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 74) { e.preventDefault(); return false; } // Ctrl+Shift+J
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 67) { e.preventDefault(); return false; } // Ctrl+Shift+C
-    if (e.ctrlKey && e.shiftKey && e.keyCode === 75) { e.preventDefault(); return false; } // Ctrl+Shift+K
-  });
-
-  // Mensaje en la consola
-  console.log('%c⚠ ALTO!', 'color:#E04E2E;font-size:50px;font-weight:bold;');
-  console.log('%cAcceso no autorizado a esta plataforma esta prohibido y sera registrado.', 'color:#333;font-size:14px;');
-  console.log('%c© Campus INNOVA 506 - Innovasoluciones Empresariales S.R.L', 'color:#666;font-size:12px;');
-})();
-
 // ─── Firebase + DB helpers ────────────────────────────────────
 const _firebaseConfig = {
   apiKey: "AIzaSyDLguVDoFBexBetUcfwBpioLqrMP1lKsIw",
@@ -1265,9 +1533,9 @@ function renderAdminCourses() {
         <div class="cc-desc">${c.desc}</div>
         <span class="badge b-orange">${c.cat}</span> <span class="badge b-gray">${c.dur}h</span>
         <div class="cc-actions">
-          <button class="btn btn-outline btn-sm" onclick="openCourseModal('${c.id}')"><i class="fa fa-edit"></i> Editar</button>
-          <button class="btn btn-primary btn-sm" onclick="openEditor('${c.id}')"><i class="fa fa-cog"></i> Contenido</button>
-          <button class="btn btn-danger btn-sm" onclick="delCourse('${c.id}')"><i class="fa fa-trash"></i></button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openCourseModal('${c.id}')"><i class="fa fa-edit"></i> Editar</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openEditor('${c.id}')"><i class="fa fa-cog"></i> Contenido</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="delCourse('${c.id}')"><i class="fa fa-trash"></i></button>
         </div>
       </div>
     </div>`).join('');
@@ -1412,8 +1680,8 @@ function renderEditorBody() {
     order.forEach((item,idx)=>{
       const isFirst=idx===0, isLast=idx===order.length-1;
       const arrows=`<div class="content-item-arrows">
-        <button class="move-btn" onclick="moveUnifiedItem(-1,${idx})" ${isFirst?'disabled':''}><i class="fa fa-chevron-up"></i></button>
-        <button class="move-btn" onclick="moveUnifiedItem(1,${idx})" ${isLast?'disabled':''}><i class="fa fa-chevron-down"></i></button>
+        <button type="button" class="move-btn" onclick="moveUnifiedItem(-1,${idx})" ${isFirst?'disabled':''}><i class="fa fa-chevron-up"></i></button>
+        <button type="button" class="move-btn" onclick="moveUnifiedItem(1,${idx})" ${isLast?'disabled':''}><i class="fa fa-chevron-down"></i></button>
       </div>`;
       if (item.type==='material') {
         const m=(c.materials||[]).find(x=>x.id===item.id); if(!m) return;
@@ -1426,8 +1694,8 @@ function renderEditorBody() {
           </div>
           <span class="badge" style="background:${m.color}22;color:${m.color};font-size:10px;flex-shrink:0">SEMANA</span>
           <div class="content-item-actions">
-            <button class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
           </div>
         </div>`; return; }
         itemsHtml+=`<div class="content-item">
@@ -1439,8 +1707,8 @@ function renderEditorBody() {
             <div class="mat-type">${matTypeLabel[m.type]||m.type}</div>
           </div>
           <div class="content-item-actions">
-            <button class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-outline btn-sm" title="Editar" onclick="openMatModal('${m.id}')"><i class="fa fa-edit"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" title="Eliminar" onclick="delMaterial('${m.id}')"><i class="fa fa-trash"></i></button>
           </div>
         </div>`;
       } else if (item.type==='evalsec') {
@@ -1454,7 +1722,7 @@ function renderEditorBody() {
           </div>
           <span class="badge" style="background:${s.color}22;color:${s.color};font-size:10px;flex-shrink:0">SEMANA</span>
           <div class="content-item-actions">
-            <button class="btn btn-danger btn-sm" onclick="delEvalSec('${s.id}')"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="delEvalSec('${s.id}')"><i class="fa fa-trash"></i></button>
           </div>
         </div>`;
       } else if (item.type==='quiz') {
@@ -1471,9 +1739,9 @@ function renderEditorBody() {
             <div class="mat-type">Cuestionario · ${q.questions.length} preguntas${q.timeLimit>0?` · ${q.timeLimit} min`:''}${q.dateOpen?` · Abre: ${formatDatetime(q.dateOpen)}`:''}${q.dateClose?` · Cierra: ${formatDatetime(q.dateClose)}`:''}</div>
           </div>
           <div class="content-item-actions">
-            ${locked||q.forceOpen?`<button class="btn btn-sm ${q.forceOpen?'btn-warning':'btn-success'}" title="${q.forceOpen?'Quitar apertura forzada':'Forzar apertura'}" onclick="toggleQuizForceOpen('${c.id}','${q.id}')"><i class="fa fa-${q.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
-            <button class="btn btn-outline btn-sm" onclick="openQuizModal('${q.id}')"><i class="fa fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="delQuiz('${q.id}')"><i class="fa fa-trash"></i></button>
+            ${locked||q.forceOpen?`<button type="button" class="btn btn-sm ${q.forceOpen?'btn-warning':'btn-success'}" title="${q.forceOpen?'Quitar apertura forzada':'Forzar apertura'}" onclick="toggleQuizForceOpen('${c.id}','${q.id}')"><i class="fa fa-${q.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
+            <button type="button" class="btn btn-outline btn-sm" onclick="openQuizModal('${q.id}')"><i class="fa fa-edit"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="delQuiz('${q.id}')"><i class="fa fa-trash"></i></button>
           </div>
         </div>`;
       } else if (item.type==='assignment') {
@@ -1490,18 +1758,18 @@ function renderEditorBody() {
             <div class="mat-type">Tarea${a.due?` · Límite: ${formatDatetime(a.due)}`:''}${a.enforceDue?' · Bloqueo activo':''}</div>
           </div>
           <div class="content-item-actions">
-            ${overdue||a.forceOpen?`<button class="btn btn-sm ${a.forceOpen?'btn-warning':'btn-success'}" title="${a.forceOpen?'Quitar apertura':'Forzar apertura'}" onclick="toggleAssignForceOpen('${c.id}','${a.id}')"><i class="fa fa-${a.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
-            <button class="btn btn-outline btn-sm" onclick="openAssignModal('${a.id}')"><i class="fa fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm" onclick="delAssign('${a.id}')"><i class="fa fa-trash"></i></button>
+            ${overdue||a.forceOpen?`<button type="button" class="btn btn-sm ${a.forceOpen?'btn-warning':'btn-success'}" title="${a.forceOpen?'Quitar apertura':'Forzar apertura'}" onclick="toggleAssignForceOpen('${c.id}','${a.id}')"><i class="fa fa-${a.forceOpen?'lock':'unlock-alt'}"></i></button>`:''}
+            <button type="button" class="btn btn-outline btn-sm" onclick="openAssignModal('${a.id}')"><i class="fa fa-edit"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="delAssign('${a.id}')"><i class="fa fa-trash"></i></button>
           </div>
         </div>`;
       }
     });
     el.innerHTML = `
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-        <button class="btn btn-primary btn-sm" onclick="openMatModal()"><i class="fa fa-plus"></i> Material</button>
-        <button class="btn btn-primary btn-sm" style="background:#5b6abf" onclick="openQuizModal()"><i class="fa fa-plus"></i> Cuestionario</button>
-        <button class="btn btn-outline btn-sm" onclick="openAssignModal()"><i class="fa fa-plus"></i> Tarea</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openMatModal()"><i class="fa fa-plus"></i> Material</button>
+        <button type="button" class="btn btn-primary btn-sm" style="background:#5b6abf" onclick="openQuizModal()"><i class="fa fa-plus"></i> Cuestionario</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openAssignModal()"><i class="fa fa-plus"></i> Tarea</button>
       </div>
       ${itemsHtml || '<div class="empty"><i class="fa fa-folder-open"></i><p>Sin contenido aún. Agrega materiales, cuestionarios o tareas.</p></div>'}`;
 
@@ -1523,7 +1791,7 @@ function renderEditorBody() {
           const ok=enrolls.some(e=>e.sid===t.id&&e.cid===edCourse.id);
           return `<tr><td>${t.name}<br><small style="color:var(--muted)">${t.email||''}</small></td>
             <td><span class="badge ${ok?'b-green':'b-gray'}">${ok?'Asignado':'Sin asignar'}</span></td>
-            <td><button class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${t.id}')">${ok?'Desasignar':'Asignar'}</button></td></tr>`;
+            <td><button type="button" class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${t.id}')">${ok?'Desasignar':'Asignar'}</button></td></tr>`;
         }).join('')}</tbody></table>
       </div>`;
     }
@@ -1536,7 +1804,7 @@ function renderEditorBody() {
           const ok=enrolls.some(e=>e.sid===s.id&&e.cid===edCourse.id);
           return `<tr><td>${s.name}<br><small style="color:var(--muted)">${s.email||''}</small></td>
             <td><span class="badge ${ok?'b-green':'b-gray'}">${ok?'Inscrito':'Sin inscribir'}</span></td>
-            <td><button class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${s.id}')">${ok?'Desinscribir':'Inscribir'}</button></td></tr>`;
+            <td><button type="button" class="btn btn-sm ${ok?'btn-danger':'btn-primary'}" onclick="toggleEnroll('${s.id}')">${ok?'Desinscribir':'Inscribir'}</button></td></tr>`;
         }).join('')}</tbody></table>`;
     } else {
       h+='<div class="empty"><i class="fa fa-users"></i><p>No hay estudiantes registrados aún</p></div>';
@@ -1720,7 +1988,7 @@ function renderQBuilder() {
     <div class="qcard" style="border-left:3px solid var(--primary)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <strong style="color:var(--primary)">Pregunta ${qi+1}</strong>
-        ${qqList.length>1?`<button class="btn btn-danger btn-sm" onclick="removeQ('${q.id}')"><i class="fa fa-times"></i></button>`:''}
+        ${qqList.length>1?`<button type="button" class="btn btn-danger btn-sm" onclick="removeQ('${q.id}')"><i class="fa fa-times"></i></button>`:''}
       </div>
       <div class="ff"><label>Enunciado *</label>
         <textarea oninput="updateQ('${q.id}','text',this.value)" style="min-height:60px">${q.text}</textarea></div>
@@ -1907,9 +2175,9 @@ function renderStudentsTb() {
       <td><span class="badge b-blue">${isT?'Firebase Auth':(s.accessCode||'Pendiente')}</span></td>
       <td>${enrolls.filter(e=>e.sid===s.id).length}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
-        ${!isT?`<button class="btn btn-outline btn-sm" onclick="openStudentProgress('${s.id}')"><i class="fa fa-chart-line"></i> Progreso</button>`:''}
-        <button class="btn btn-outline btn-sm" onclick="openEditStudent('${s.id}')"><i class="fa fa-edit"></i></button>
-        <button class="btn btn-danger btn-sm" onclick="delStudent('${s.id}')"><i class="fa fa-trash"></i></button>
+        ${!isT?`<button type="button" class="btn btn-outline btn-sm" onclick="openStudentProgress('${s.id}')"><i class="fa fa-chart-line"></i> Progreso</button>`:''}
+        <button type="button" class="btn btn-outline btn-sm" onclick="openEditStudent('${s.id}')"><i class="fa fa-edit"></i></button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="delStudent('${s.id}')"><i class="fa fa-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -2080,7 +2348,7 @@ function renderAdminGrades() {
           const s=g.attempts[i], pct=Math.round((s.score/s.max)*100), ok=pct>=pass;
           attCells+=`<td style="white-space:nowrap">
             <span class="badge ${ok?'b-green':'b-orange'}" style="font-size:11px">${s.score}/${s.max} (${pct}%)</span>
-            <button class="btn btn-danger btn-sm" style="padding:2px 6px;margin-left:3px" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" style="padding:2px 6px;margin-left:3px" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
           </td>`;
         } else {
           attCells+=`<td style="color:var(--muted);font-size:12px;text-align:center">—</td>`;
@@ -2092,7 +2360,7 @@ function renderAdminGrades() {
         <td style="font-size:13px">${g.qtitle}</td>
         ${attCells}
         <td><span class="badge ${approved?'b-green':'b-red'}">${bestPct}% — ${approved?'Aprobado':'Reprobado'}</span></td>
-        <td>${st?`<button class="btn btn-outline btn-sm" onclick="exportStudentPDF('${st.id}')"><i class="fa fa-file-pdf"></i> Reporte</button>`:''}</td>
+        <td>${st?`<button type="button" class="btn btn-outline btn-sm" onclick="exportStudentPDF('${st.id}')"><i class="fa fa-file-pdf"></i> Reporte</button>`:''}</td>
       </tr>`;
     });
     body.innerHTML=`<div class="card" style="overflow-x:auto"><table>
@@ -2118,8 +2386,8 @@ function renderAdminGrades() {
           <td><span class="badge ${graded?'b-green':'b-orange'}">${graded?'Calificado':'Pendiente'}</span></td>
           <td>${graded?`<strong>${s.grade}%</strong> <span class="badge ${approved?'b-green':'b-red'}" style="font-size:10px">${approved?'Aprobado':'Reprobado'}</span>`:'—'}</td>
           <td style="display:flex;gap:4px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" onclick="openGradeAssignModal('${s.id}')"><i class="fa fa-${graded?'eye':'check'}"></i> ${graded?'Ver/Editar':'Calificar'}</button>
-            <button class="btn btn-danger btn-sm" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openGradeAssignModal('${s.id}')"><i class="fa fa-${graded?'eye':'check'}"></i> ${graded?'Ver/Editar':'Calificar'}</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="delGrade('${s.id}')"><i class="fa fa-trash"></i></button>
           </td></tr>`;
       }).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No hay tareas entregadas aún</td></tr>'}</tbody>
     </table></div>`;
@@ -2404,7 +2672,7 @@ function renderSCQuiz(el,c,q) {
       </div>
       ${dateLocked?`<span class="badge b-red"><i class="fa fa-lock"></i> No disponible</span>`
         :limitReached?`<span class="badge b-red"><i class="fa fa-lock"></i> Límite alcanzado</span>`
-        :`<button class="btn btn-primary" onclick="startQuiz('${q.id}')"><i class="fa fa-play"></i> ${attUsed>0?'Intentar de nuevo':'Iniciar'}</button>`}
+        :`<button type="button" class="btn btn-primary" onclick="startQuiz('${q.id}')"><i class="fa fa-play"></i> ${attUsed>0?'Intentar de nuevo':'Iniciar'}</button>`}
     </div>
     ${bestPct!==null?`<div class="pbar"><div class="pfill" style="width:${bestPct}%;background:${bestPct>=_pass?'var(--success)':'var(--primary)'}"></div></div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px">Mejor puntaje: <strong style="color:${bestPct>=_pass?'var(--success)':'var(--primary)'}">${bestPct}%</strong></div>`:''}
@@ -2433,7 +2701,7 @@ function renderSCAssign(el,c,a) {
       :dueLocked
         ?`<div style="padding:12px;background:#fde8e8;border-radius:8px;font-size:13px;color:#721c24"><i class="fa fa-lock"></i> Entregas cerradas (venció el ${formatDatetime(a.due)}). Contacta al instructor.</div>`
         :`<textarea id="atxt-${a.id}" placeholder="Escribe tu respuesta o comentario..." style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;min-height:120px;font-family:inherit;font-size:14px;resize:vertical"></textarea>
-          <button class="btn btn-primary" style="margin-top:10px" onclick="submitAssign('${a.id}','${a.title.replace(/'/g,"\\'")}')"><i class="fa fa-paper-plane"></i> Entregar Tarea</button>`}
+          <button type="button" class="btn btn-primary" style="margin-top:10px" onclick="submitAssign('${a.id}','${a.title.replace(/'/g,"\\'")}')"><i class="fa fa-paper-plane"></i> Entregar Tarea</button>`}
   </div>`;
 }
 
@@ -2549,7 +2817,7 @@ function renderQuizTake(attemptNum, maxAttempts, prevAttempts) {
         </label>`).join('')}
     </div>`).join('')+`
   <div style="text-align:center;margin:28px 0">
-    <button class="btn btn-primary" style="padding:13px 36px;font-size:16px" onclick="submitQuiz(false)">
+    <button type="button" class="btn btn-primary" style="padding:13px 36px;font-size:16px" onclick="submitQuiz(false)">
       <i class="fa fa-check-circle"></i> Enviar Cuestionario</button>
   </div>`;
 }
@@ -2593,12 +2861,12 @@ function submitQuiz(autoSubmit) {
         }).join('')}
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
-        ${attemptsLeft>0?`<button class="btn btn-outline" style="justify-content:center" onclick="startQuiz('${cQuiz.id}')">
+        ${attemptsLeft>0?`<button type="button" class="btn btn-outline" style="justify-content:center" onclick="startQuiz('${cQuiz.id}')">
           <i class="fa fa-redo"></i> Intentar de nuevo (${attemptsLeft} intento${attemptsLeft!==1?'s':''} restante${attemptsLeft!==1?'s':''})</button>`
           :`<div style="padding:10px 12px;background:#fde8e3;border-radius:8px;font-size:13px;color:var(--primary);text-align:center"><i class="fa fa-lock"></i> Has usado todos tus intentos</div>`}
-        <button class="btn btn-primary" style="justify-content:center" onclick="showView('v-scourse');renderSCNav();renderSCContent()">
+        <button type="button" class="btn btn-primary" style="justify-content:center" onclick="showView('v-scourse');renderSCNav();renderSCContent()">
           <i class="fa fa-arrow-left"></i> Volver al curso</button>
-        <button class="btn btn-outline" style="justify-content:center" onclick="nav_sgrades()">
+        <button type="button" class="btn btn-outline" style="justify-content:center" onclick="nav_sgrades()">
           <i class="fa fa-star"></i> Ver mis resultados</button>
       </div>
     </div>`;
@@ -3250,7 +3518,7 @@ function renderCourseGradeBook(el, c) {
 
   el.innerHTML = `
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-      <button class="btn btn-success btn-sm" onclick="exportCourseGradeCSV('${c.id}')"><i class="fa fa-file-excel"></i> Exportar CSV</button>
+      <button type="button" class="btn btn-success btn-sm" onclick="exportCourseGradeCSV('${c.id}')"><i class="fa fa-file-excel"></i> Exportar CSV</button>
     </div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
       <i class="fa fa-users"></i> ${enrolled.length} estudiante${enrolled.length!==1?'s':''} inscritos &nbsp;·&nbsp;
@@ -3322,7 +3590,7 @@ function renderGradeBook() {
       <option value="all">Todos los cursos</option>
       ${courses.map(c=>`<option value="${c.id}" ${gbSelectedCourse===c.id?'selected':''}>${c.emoji||'📚'} ${c.title}</option>`).join('')}
     </select>
-    <button class="btn btn-success" onclick="exportGradebookCSV()"><i class="fa fa-file-excel"></i> Exportar CSV</button>`;
+    <button type="button" class="btn btn-success" onclick="exportGradebookCSV()"><i class="fa fa-file-excel"></i> Exportar CSV</button>`;
 
   const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
   if (!filteredCourses.length) {
@@ -3454,19 +3722,17 @@ function renderGradeBook() {
           <span style="font-size:20px">${c.emoji||'📚'}</span>
           <div>
             <div style="font-size:16px;font-weight:700">${c.title}</div>
-            <div style="font-size:12px;color:var(--muted)">${enrolled.length} estudiante${enrolled.length!==1?'s':''} · Aprobación: ${cfg.passThreshold}% · ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Suma':'Nota más alta'}</div>
+            <div style="font-size:12px;color:var(--muted)">${enrolled.length} estudiante${enrolled.length!==1?'s':''} · Aprobación: ${cfg.passThreshold}% · ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Promedio global':'Nota más alta'}</div>
           </div>
         </div>
-        <div class="gb-wrap">
+        <div class="gb-wrap" style="border:0;border-radius:0;box-shadow:none">
           <table class="gb-table">
             <thead>${groupRow}</thead>
             <tbody>
               ${rows}
               <tr class="gb-avg-row">
                 <td class="gb-student">📊 Promedio clase</td>
-                ${avgQuizCells}${avgQuizCatCell}
-                ${avgAssignCells}${avgAssignCatCell}
-                ${avgFinalCell}
+                ${avgQuizCells}${avgQuizCatCell}${avgAssignCells}${avgAssignCatCell}${avgFinalCell}
               </tr>
             </tbody>
           </table>
@@ -3474,127 +3740,12 @@ function renderGradeBook() {
       </div>`;
   });
 
-  if (!html) html = '<div class="empty"><i class="fa fa-table"></i><p>No hay datos de calificaciones aún</p></div>';
-  document.getElementById('gb-body').innerHTML = html;
+  document.getElementById('gb-body').innerHTML = html ||
+    '<div class="empty"><i class="fa fa-user-graduate"></i><p>No hay estudiantes inscritos en los cursos seleccionados.</p></div>';
 }
 
-// ─── Grade Config ─────────────────────────────────────────────
-function renderGradeConfig() {
-  document.getElementById('gb-actions').innerHTML = '';
-  const cfg = getGradeConfig();
-  const aggLabels = {
-    weighted_mean:'Media ponderada (recomendado)',
-    mean:'Media simple',
-    sum:'Suma de notas',
-    highest:'Nota más alta'
-  };
-
-  document.getElementById('gb-body').innerHTML = `
-    <!-- Método de agregación -->
-    <div class="cfg-section">
-      <div class="cfg-section-title"><i class="fa fa-calculator" style="color:var(--primary)"></i> Método de Cálculo</div>
-      <div class="cfg-grid">
-        <div class="cfg-item">
-          <label>Método de agregación</label>
-          <select id="cfg-agg" onchange="cfgToggleWeights()">
-            ${Object.entries(aggLabels).map(([v,l])=>`<option value="${v}" ${cfg.aggregation===v?'selected':''}>${l}</option>`).join('')}
-          </select>
-          <small style="color:var(--muted);font-size:11px;margin-top:2px">Define cómo se calcula la nota final del curso</small>
-        </div>
-        <div class="cfg-item">
-          <label>Umbral de aprobación (%)</label>
-          <input type="number" id="cfg-pass" value="${cfg.passThreshold}" min="1" max="100">
-          <small style="color:var(--muted);font-size:11px;margin-top:2px">Porcentaje mínimo para aprobar (actualmente ${cfg.passThreshold}%)</small>
-        </div>
-        <div class="cfg-item">
-          <label>Descartar N notas más bajas de cuestionarios</label>
-          <input type="number" id="cfg-drop" value="${cfg.dropLowest}" min="0" max="10">
-          <small style="color:var(--muted);font-size:11px;margin-top:2px">0 = no descartar. Moodle: "Drop lowest"</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ponderación de categorías -->
-    <div class="cfg-section" id="cfg-weights-section" style="${cfg.aggregation!=='weighted_mean'?'opacity:.5;pointer-events:none':''}">
-      <div class="cfg-section-title"><i class="fa fa-balance-scale" style="color:var(--info)"></i> Ponderación de Categorías <small style="font-weight:400;color:var(--muted)">(solo para Media Ponderada)</small></div>
-      <div class="cfg-grid">
-        <div class="cfg-item">
-          <label>Peso de Cuestionarios (%)</label>
-          <input type="number" id="cfg-qw" value="${cfg.quizWeight}" min="0" max="100" oninput="syncWeights('q')">
-        </div>
-        <div class="cfg-item">
-          <label>Peso de Tareas (%)</label>
-          <input type="number" id="cfg-aw" value="${cfg.assignWeight}" min="0" max="100" oninput="syncWeights('a')">
-        </div>
-      </div>
-      <div style="margin-top:10px;padding:10px 14px;background:#d0e8f5;border-radius:8px;font-size:13px;color:#155169">
-        <i class="fa fa-info-circle"></i> Los pesos deben sumar 100%. Ej: Cuestionarios 60% + Tareas 40% = 100%
-        <span id="cfg-weight-warn" style="color:#e74c3c;font-weight:700;margin-left:8px;display:none">⚠️ No suman 100%</span>
-      </div>
-    </div>
-
-    <!-- Tipo de visualización -->
-    <div class="cfg-section">
-      <div class="cfg-section-title"><i class="fa fa-eye" style="color:var(--success)"></i> Tipo de Visualización de Notas</div>
-      <div class="cfg-grid">
-        <div class="cfg-item">
-          <label>Mostrar nota como</label>
-          <select id="cfg-display">
-            <option value="percentage" ${cfg.displayType==='percentage'?'selected':''}>Solo porcentaje (ej: 85%)</option>
-            <option value="points" ${cfg.displayType==='points'?'selected':''}>Solo puntos (ej: 17/20)</option>
-            <option value="both" ${cfg.displayType==='both'?'selected':''}>Porcentaje + puntos (ej: 85% (17/20))</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
-      <button class="btn btn-primary" onclick="saveGradeConfig()" style="padding:12px 28px">
-        <i class="fa fa-save"></i> Guardar Configuración
-      </button>
-      <button class="btn btn-outline" onclick="resetGradeConfig()">
-        <i class="fa fa-undo"></i> Restaurar valores predeterminados
-      </button>
-    </div>`;
-}
-
-function cfgToggleWeights() {
-  const agg = document.getElementById('cfg-agg').value;
-  const sec = document.getElementById('cfg-weights-section');
-  if (sec) sec.style.cssText = agg!=='weighted_mean' ? 'opacity:.5;pointer-events:none' : '';
-}
-
-function syncWeights(changed) {
-  const qEl = document.getElementById('cfg-qw'), aEl = document.getElementById('cfg-aw');
-  if (!qEl||!aEl) return;
-  const q = parseInt(qEl.value)||0, a = parseInt(aEl.value)||0;
-  const warn = document.getElementById('cfg-weight-warn');
-  if (warn) warn.style.display = (q+a)!==100 ? 'inline' : 'none';
-}
-
-function saveGradeConfig() {
-  const agg = document.getElementById('cfg-agg').value;
-  const pass = parseInt(document.getElementById('cfg-pass').value)||70;
-  const qw = parseInt(document.getElementById('cfg-qw').value)||60;
-  const aw = parseInt(document.getElementById('cfg-aw').value)||40;
-  const drop = parseInt(document.getElementById('cfg-drop').value)||0;
-  const display = document.getElementById('cfg-display').value;
-
-  if (agg==='weighted_mean' && qw+aw!==100) {
-    toast('Los pesos deben sumar exactamente 100%','err'); return;
-  }
-  if (pass<1||pass>100) { toast('El umbral debe estar entre 1 y 100','err'); return; }
-
-  DB.set('gradeConfig',{passThreshold:pass,aggregation:agg,quizWeight:qw,assignWeight:aw,displayType:display,dropLowest:drop});
-  toast('Configuración de calificaciones guardada');
-  renderGradeConfig();
-}
-
-function resetGradeConfig() {
-  if (!confirm('¿Restaurar la configuración predeterminada?')) return;
-  DB.set('gradeConfig', DEFAULT_GRADE_CONFIG);
-  renderGradeConfig();
-  toast('Configuración restaurada');
+function csvSafe(value) {
+  return `"${String(value ?? '').replace(/"/g,'""')}"`;
 }
 
 function exportGradebookCSV() {
@@ -3603,47 +3754,127 @@ function exportGradebookCSV() {
   const users = DB.get('users')||[];
   const enrolls = DB.get('enrolls')||[];
   const allSubs = DB.get('subs')||[];
-  const students = users.filter(u=>u.role==='student');
-  const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
+  const selected = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
+  const lines = [[
+    'Curso','Estudiante','Usuario','Promedio cuestionarios','Promedio tareas','Nota final','Estado'
+  ].map(csvSafe).join(',')];
 
-  let csv = '\uFEFF'; // BOM for Excel
-  filteredCourses.forEach(c=>{
-    const enrolled = enrolls.filter(e=>e.cid===c.id).map(e=>students.find(u=>u.id===e.sid)).filter(Boolean);
-    if (!enrolled.length) return;
-    csv += `\n"Curso: ${c.title}"\n`;
-    const qHeaders = (c.quizzes||[]).map(q=>`"${q.title}"`).join(',');
-    const aHeaders = (c.assignments||[]).map(a=>`"${a.title}"`).join(',');
-    csv += `"Estudiante",${qHeaders}${qHeaders?',':''}"Prom. Cuestionarios",${aHeaders}${aHeaders?',':''}"Prom. Tareas","Nota Final"\n`;
-    enrolled.forEach(st=>{
-      const qVals = (c.quizzes||[]).map(q=>{
-        const best = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.qid===q.id&&s.type==='quiz').reduce((b,s)=>(!b||s.score>b.score)?s:b,null);
-        return best ? Math.round((best.score/best.max)*100)+'%' : '—';
+  selected.forEach(c => {
+    const enrolled = enrolls.filter(e=>e.cid===c.id)
+      .map(e=>users.find(u=>u.id===e.sid)).filter(Boolean);
+    enrolled.forEach(st => {
+      const bestByQuiz = {};
+      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{
+        if (!bestByQuiz[s.qid] || s.score>bestByQuiz[s.qid].score) bestByQuiz[s.qid]=s;
       });
-      const aVals = (c.assignments||[]).map(a=>{
-        const sub = allSubs.find(s=>s.sid===st.id&&s.cid===c.id&&s.aid===a.id&&s.type==='assignment'&&s.graded);
-        return sub ? sub.grade+'%' : '—';
-      });
-      const qByQid={};
-      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{if(!qByQid[s.qid]||s.score>qByQid[s.qid].score)qByQid[s.qid]=s;});
-      const qPcts=Object.values(qByQid).map(s=>Math.round((s.score/s.max)*100));
-      const qAvg=qPcts.length?Math.round(qPcts.reduce((a,b)=>a+b,0)/qPcts.length)+'%':'—';
-      const aSubs=allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded);
-      const aAvg=aSubs.length?Math.round(aSubs.reduce((a,s)=>a+Number(s.grade),0)/aSubs.length)+'%':'—';
-      const final=calcStudentCourseGrade(st.id,c.id,allSubs,cfg);
-      csv += `"${st.name}",${qVals.join(',')},${qAvg},${aVals.join(',')},${aAvg},${final!==null?final+'%':'—'}\n`;
+      let quizPcts = Object.values(bestByQuiz).map(s=>Math.round((s.score/s.max)*100));
+      if (cfg.dropLowest>0 && quizPcts.length>cfg.dropLowest) {
+        quizPcts=[...quizPcts].sort((a,b)=>a-b).slice(cfg.dropLowest);
+      }
+      const quizAvg = quizPcts.length ? Math.round(quizPcts.reduce((a,b)=>a+b,0)/quizPcts.length) : '';
+      const assignPcts = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded).map(s=>Number(s.grade));
+      const assignAvg = assignPcts.length ? Math.round(assignPcts.reduce((a,b)=>a+b,0)/assignPcts.length) : '';
+      const final = calcStudentCourseGrade(st.id,c.id,allSubs,cfg);
+      const status = final===null ? 'Sin calificar' : final>=cfg.passThreshold ? 'Aprobado' : 'En proceso';
+      lines.push([c.title,st.name,st.username||'',quizAvg===''?'':quizAvg+'%',assignAvg===''?'':assignAvg+'%',final===null?'':final+'%',status].map(csvSafe).join(','));
     });
   });
 
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='Cuaderno_Calificaciones_Campus_INNOVA_506.csv';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('CSV exportado exitosamente');
+  if (lines.length===1) { toast('No hay calificaciones para exportar','err'); return; }
+  const blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`Cuaderno_Calificaciones_INNOVA506_${todayStr()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  toast('Cuaderno de calificaciones exportado');
 }
 
-// ─── Init ─────────────────────────────────────────────────────
+function renderGradeConfig() {
+  const cfg = getGradeConfig();
+  document.getElementById('gb-actions').innerHTML='';
+  document.getElementById('gb-body').innerHTML = `
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="fa fa-sliders-h" style="color:var(--primary)"></i> Cálculo y visualización de notas</div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label for="gcf-pass">Nota mínima de aprobación (%)</label>
+          <input type="number" id="gcf-pass" min="0" max="100" value="${cfg.passThreshold}">
+        </div>
+        <div class="cfg-item">
+          <label for="gcf-aggregation">Método de cálculo</label>
+          <select id="gcf-aggregation" onchange="toggleGradeWeightFields()">
+            <option value="weighted_mean" ${cfg.aggregation==='weighted_mean'?'selected':''}>Media ponderada</option>
+            <option value="mean" ${cfg.aggregation==='mean'?'selected':''}>Media simple por categorías</option>
+            <option value="sum" ${cfg.aggregation==='sum'?'selected':''}>Promedio de todas las actividades</option>
+            <option value="highest" ${cfg.aggregation==='highest'?'selected':''}>Nota más alta</option>
+          </select>
+        </div>
+        <div class="cfg-item grade-weight-field">
+          <label for="gcf-quiz">Peso de cuestionarios (%)</label>
+          <input type="number" id="gcf-quiz" min="0" max="100" value="${cfg.quizWeight}">
+        </div>
+        <div class="cfg-item grade-weight-field">
+          <label for="gcf-assign">Peso de tareas (%)</label>
+          <input type="number" id="gcf-assign" min="0" max="100" value="${cfg.assignWeight}">
+        </div>
+        <div class="cfg-item">
+          <label for="gcf-display">Presentación de la nota</label>
+          <select id="gcf-display">
+            <option value="percentage" ${cfg.displayType==='percentage'?'selected':''}>Porcentaje</option>
+            <option value="points" ${cfg.displayType==='points'?'selected':''}>Puntos</option>
+            <option value="both" ${cfg.displayType==='both'?'selected':''}>Porcentaje y puntos</option>
+          </select>
+        </div>
+        <div class="cfg-item">
+          <label for="gcf-drop">Cuestionarios más bajos a excluir</label>
+          <input type="number" id="gcf-drop" min="0" max="10" value="${cfg.dropLowest}">
+        </div>
+      </div>
+      <div class="form-note" style="margin-top:18px">La configuración se aplica al cálculo de la nota final en todos los cursos. Cuando utilice media ponderada, ambos pesos deben sumar 100%.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap">
+        <button type="button" class="btn btn-outline" onclick="resetGradeConfig()"><i class="fa fa-rotate-left"></i> Restaurar valores</button>
+        <button type="button" class="btn btn-primary" onclick="saveGradeConfig()"><i class="fa fa-save"></i> Guardar configuración</button>
+      </div>
+    </div>`;
+  toggleGradeWeightFields();
+}
+
+function toggleGradeWeightFields() {
+  const aggregation = document.getElementById('gcf-aggregation');
+  if (!aggregation) return;
+  document.querySelectorAll('.grade-weight-field').forEach(el=>{
+    el.style.opacity = aggregation.value==='weighted_mean' ? '1' : '.45';
+    const input=el.querySelector('input'); if (input) input.disabled=aggregation.value!=='weighted_mean';
+  });
+}
+
+function saveGradeConfig() {
+  const cfg = {
+    passThreshold:Number(document.getElementById('gcf-pass').value),
+    aggregation:document.getElementById('gcf-aggregation').value,
+    quizWeight:Number(document.getElementById('gcf-quiz').value),
+    assignWeight:Number(document.getElementById('gcf-assign').value),
+    displayType:document.getElementById('gcf-display').value,
+    dropLowest:Number(document.getElementById('gcf-drop').value)
+  };
+  if (!Number.isFinite(cfg.passThreshold) || cfg.passThreshold<0 || cfg.passThreshold>100) {
+    toast('La nota mínima debe estar entre 0 y 100','err'); return;
+  }
+  if (cfg.aggregation==='weighted_mean' && cfg.quizWeight+cfg.assignWeight!==100) {
+    toast('Los pesos de cuestionarios y tareas deben sumar 100%','err'); return;
+  }
+  if (cfg.dropLowest<0 || cfg.dropLowest>10) { toast('La cantidad a excluir debe estar entre 0 y 10','err'); return; }
+  DB.set('gradeConfig',cfg);
+  toast('Configuración de calificaciones guardada');
+  renderGradeConfig();
+}
+
+function resetGradeConfig() {
+  DB.set('gradeConfig',{...DEFAULT_GRADE_CONFIG});
+  toast('Configuración restaurada');
+  renderGradeConfig();
+}
+
 startApp();
 </script>
 </body>
