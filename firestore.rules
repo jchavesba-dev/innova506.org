@@ -6,83 +6,125 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function hasProfile() {
-      return signedIn() && exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid));
+    function profilePath(uid) {
+      return /databases/$(database)/documents/userProfiles/$(uid);
     }
 
-    function profile() {
-      return get(/databases/$(database)/documents/userProfiles/$(request.auth.uid));
+    function hasProfile() {
+      return signedIn() && exists(profilePath(request.auth.uid));
+    }
+
+    function currentProfile() {
+      return get(profilePath(request.auth.uid)).data;
     }
 
     function isAdmin() {
-      return hasProfile() && profile().data.role == 'admin';
+      return hasProfile() && currentProfile().role == 'admin' && currentProfile().disabled != true;
     }
 
     function isTeacher() {
-      return hasProfile() && profile().data.role == 'teacher';
+      return hasProfile() && currentProfile().role == 'teacher' && currentProfile().disabled != true;
     }
 
     function isStudent() {
-      return hasProfile() && profile().data.role == 'student';
+      return hasProfile() && currentProfile().role == 'student' && currentProfile().disabled != true;
     }
 
-    function isTeacherAssigned(courseId) {
-      return isTeacher() && exists(/databases/$(database)/documents/courses/$(courseId)/teachers/$(request.auth.uid));
+    function enrollmentPath(courseId, uid) {
+      return /databases/$(database)/documents/enrollments/$(courseId + '_' + uid);
     }
 
-    function isStudentEnrolled(courseId) {
-      return isStudent() && exists(/databases/$(database)/documents/courses/$(courseId)/enrollments/$(request.auth.uid));
+    function isCourseMember(courseId) {
+      return hasProfile() && exists(enrollmentPath(courseId, request.auth.uid));
     }
 
-    // Legacy collection used by the current single-file LMS. Keep this admin-only
-    // after migrating data to the normalized collections below.
-    match /lms/{docId} {
-      allow read, write: if isAdmin();
+    function isTeacherFor(courseId) {
+      return isTeacher()
+        && exists(enrollmentPath(courseId, request.auth.uid))
+        && get(enrollmentPath(courseId, request.auth.uid)).data.role == 'teacher';
+    }
+
+    function adminBootstrap(uid) {
+      return signedIn()
+        && request.auth.uid == uid
+        && request.auth.token.email == 'innova506@hotmail.com'
+        && !exists(profilePath(uid))
+        && request.resource.data.id == uid
+        && request.resource.data.email == 'innova506@hotmail.com'
+        && request.resource.data.role == 'admin'
+        && request.resource.data.disabled == false
+        && request.resource.data.keys().hasOnly([
+          'id', 'name', 'username', 'role', 'email', 'authProvider', 'disabled'
+        ]);
     }
 
     match /userProfiles/{uid} {
       allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin() || adminBootstrap(uid);
+      allow update, delete: if isAdmin();
     }
 
-    match /accessCodes/{codeId} {
-      allow get: if signedIn() && resource.data.active == true;
-      allow list: if false;
-      allow create, update, delete: if isAdmin();
+    // Los códigos son credenciales. Solo el administrador puede leerlos.
+    match /studentCodes/{uid} {
+      allow read, create, update, delete: if isAdmin();
     }
 
     match /courses/{courseId} {
-      allow read: if isAdmin() || isTeacherAssigned(courseId) || isStudentEnrolled(courseId);
-      allow create, update, delete: if isAdmin() || isTeacherAssigned(courseId);
+      allow read: if isAdmin() || isCourseMember(courseId);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isTeacherFor(courseId);
+    }
 
-      match /teachers/{uid} {
-        allow read: if isAdmin() || request.auth.uid == uid || isTeacherAssigned(courseId);
-        allow write: if isAdmin();
-      }
+    match /enrollments/{enrollmentId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.sid == request.auth.uid)
+        || isTeacherFor(resource.data.cid);
+      allow create, update, delete: if isAdmin();
+    }
 
-      match /enrollments/{uid} {
-        allow read: if isAdmin() || isTeacherAssigned(courseId) || request.auth.uid == uid;
-        allow write: if isAdmin();
-      }
+    match /submissions/{submissionId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.sid == request.auth.uid)
+        || isTeacherFor(resource.data.cid);
 
-      match /progress/{uid} {
-        allow read: if isAdmin() || isTeacherAssigned(courseId) || request.auth.uid == uid;
-        allow create, update: if isAdmin() || request.auth.uid == uid;
-        allow delete: if isAdmin();
-      }
+      allow create: if isStudent()
+        && request.resource.data.sid == request.auth.uid
+        && request.resource.data.id == submissionId
+        && request.resource.data.type in ['quiz', 'assignment']
+        && exists(enrollmentPath(request.resource.data.cid, request.auth.uid));
 
-      match /submissions/{submissionId} {
-        allow read: if isAdmin() || isTeacherAssigned(courseId) || resource.data.studentUid == request.auth.uid;
-        allow create: if isStudentEnrolled(courseId) && request.resource.data.studentUid == request.auth.uid;
-        allow update: if isAdmin() || isTeacherAssigned(courseId);
-        allow delete: if isAdmin();
-      }
+      allow update: if (isAdmin() || isTeacherFor(resource.data.cid))
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.sid == resource.data.sid
+        && request.resource.data.cid == resource.data.cid
+        && request.resource.data.type == resource.data.type;
 
-      match /grades/{gradeId} {
-        allow read: if isAdmin() || isTeacherAssigned(courseId) || resource.data.studentUid == request.auth.uid;
-        allow create, update, delete: if isAdmin() || isTeacherAssigned(courseId);
-      }
+      allow delete: if isAdmin() || isTeacherFor(resource.data.cid);
+    }
+
+    match /views/{viewId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.sid == request.auth.uid)
+        || isTeacherFor(resource.data.cid);
+
+      allow create: if isStudent()
+        && request.resource.data.sid == request.auth.uid
+        && request.resource.data.id == viewId
+        && exists(enrollmentPath(request.resource.data.cid, request.auth.uid));
+
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if hasProfile();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // La estructura antigua queda cerrada de forma explícita.
+    match /lms/{document=**} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

@@ -1,23 +1,48 @@
-# Configuración de seguridad sin costo - INNOVA 506
+# Publicación segura del Campus INNOVA 506
 
-## Antes de publicar el campus actualizado
+Esta versión elimina el almacenamiento global en `lms` y utiliza colecciones separadas con control por identidad:
 
-1. En Firebase Console, abre el proyecto `campus-innova506`.
-2. En Authentication > Sign-in method, habilita:
-   - Email/Password para admin y docentes.
-   - Anonymous para que los estudiantes puedan iniciar una sesión técnica antes de validar su código.
-3. En Authentication > Users, crea la cuenta admin con el correo `innova506@hotmail.com` y una contraseña privada que no se guarde en el repositorio ni en este documento.
-4. Publica el sitio actualizado.
-5. Ingresa como admin usando correo/contraseña. Al entrar, el campus ejecuta la migración de seguridad: elimina contraseñas locales heredadas y refuerza códigos débiles de estudiantes.
-6. Para cada docente creado en el campus, crea también su usuario en Firebase Auth con el mismo correo.
-7. Los estudiantes no necesitan contraseña: se les comparte su código `INNOVA-XXXX-XXXX-XXXX`.
+- `userProfiles`: perfil y rol de cada cuenta.
+- `studentCodes`: credenciales estudiantiles, visibles únicamente para el administrador.
+- `courses`: cursos y contenidos.
+- `enrollments`: matrículas de estudiantes y asignaciones de docentes.
+- `submissions`: cuestionarios y tareas.
+- `views`: avance de materiales.
+- `settings`: configuración académica.
 
-## Sobre `firestore.rules`
+## Requisitos previos
 
-El archivo `firestore.rules` incluido es el objetivo seguro para una estructura normalizada por colecciones (`userProfiles`, `courses`, `enrollments`, `submissions`, `grades`, `accessCodes`).
+1. En Firebase Console, proyecto `campus-innova506`, abra **Authentication > Sign-in method**.
+2. Active **Email/Password**.
+3. Desactive **Anonymous**; esta versión ya no lo utiliza.
+4. En **Authentication > Users**, confirme que existe la cuenta `innova506@hotmail.com` y cambie su contraseña si apareció alguna vez en un archivo o conversación.
+5. No guarde esa contraseña en GitHub, Firestore ni en este documento.
 
-No despliegues esas reglas sobre el LMS actual basado en la colección legacy `lms` hasta migrar los datos a esa estructura, porque `lms` queda admin-only por diseño. Mientras el campus siga leyendo `lms`, la seguridad real depende de activar Firebase Auth y hacer la migración gradual de datos.
+## Orden de publicación
 
-## Criterio de costo
+Como el campus está vacío, publique primero las reglas y luego la página:
 
-Estos cambios usan GitHub Pages, Firebase Auth, Firestore y Formsubmit. No agregan Cloud Functions, servidores, planes pagos ni servicios externos nuevos.
+```bash
+firebase login
+firebase deploy --only firestore:rules --project campus-innova506
+git add campus/index.html firestore.rules firebase.json SECURITY_SETUP.md
+git commit -m "Seguridad: aislar datos del campus por usuario y curso"
+git push origin master
+```
+
+Después abra `https://innova506.org/campus/` e ingrese con la cuenta administradora. El primer acceso crea de manera controlada el perfil administrador y, si no existen cursos, los seis cursos base.
+
+## Comprobaciones posteriores
+
+1. Cree un estudiante de prueba y copie su código.
+2. Inscríbalo en un solo curso.
+3. Cierre sesión e ingrese con el código.
+4. Confirme que solo aparece el curso asignado.
+5. Cree un docente de prueba con una contraseña temporal y asígnele un curso.
+6. Confirme que el docente solo ve ese curso y sus estudiantes.
+7. En Firestore, confirme que no se crean nuevos documentos en `lms`.
+8. Elimine los documentos antiguos de `lms` únicamente después de verificar el acceso administrador.
+
+## Límites conocidos
+
+El campus continúa siendo una aplicación estática en GitHub Pages. Las reglas impiden el acceso anónimo y el acceso cruzado a perfiles, matrículas, entregas y progreso. Sin embargo, los cuestionarios se califican en el navegador; para evaluaciones de alto riesgo, la calificación debe trasladarse a una función de servidor confiable.

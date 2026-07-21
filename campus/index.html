@@ -955,7 +955,7 @@ tbody tr:hover td { background:#fbfaf8; }
     </div>
     <div class="frow">
       <div class="ff"><label>Usuario interno</label><input type="text" id="sf-user" placeholder="Se genera si queda vacío"></div>
-      <div class="ff"><label>Tipo de acceso</label><div class="form-note" id="sf-auth-note">El estudiante ingresa con código. No se guardan contraseñas en el campus.</div><input type="hidden" id="sf-pass"></div>
+      <div class="ff" id="sf-pass-wrap" style="display:none"><label>Contraseña temporal *</label><input type="password" id="sf-pass" autocomplete="new-password" minlength="10" placeholder="Mínimo 10 caracteres"><div class="form-note">Entréguela al docente por un canal privado y pídale cambiarla.</div></div>
     </div>
     <div class="ff" id="sf-code-wrap"><label>Código de Acceso <small>(aleatorio y revocable)</small></label>
       <div class="code-row">
@@ -964,7 +964,7 @@ tbody tr:hover td { background:#fbfaf8; }
       </div>
       <div class="form-note">Compártelo solo con la persona estudiante. Usa 12 caracteres aleatorios para evitar códigos predecibles.</div>
     </div>
-    <div class="security-callout"><i class="fa fa-shield-alt"></i> Para docentes, crea también la cuenta en Firebase Authentication con el mismo correo. No se almacenará contraseña aquí.</div>
+    <div class="security-callout" id="sf-auth-note"><i class="fa fa-shield-alt"></i> El código crea una cuenta individual en Firebase. No queda expuesto en el perfil público del estudiante.</div>
     <div class="mft">
       <button type="button" class="btn btn-outline" onclick="closeModal('m-student')">Cancelar</button>
       <button type="button" class="btn btn-primary" onclick="saveStudent()"><i class="fa fa-user-plus"></i> Registrar</button>
@@ -1187,7 +1187,7 @@ tbody tr:hover td { background:#fbfaf8; }
 
 <!-- ===================== SCRIPT ===================== -->
 <script>
-// ─── Firebase + DB helpers ────────────────────────────────────
+// ─── Firebase + almacenamiento seguro ─────────────────────────
 const _firebaseConfig = {
   apiKey: "AIzaSyDLguVDoFBexBetUcfwBpioLqrMP1lKsIw",
   authDomain: "campus-innova506.firebaseapp.com",
@@ -1200,63 +1200,178 @@ const _firebaseConfig = {
 let _fbdb = null;
 let _fbauth = null;
 const _cache = {};
+const _persistedDocs = {};
+let _persistQueue = Promise.resolve();
+
+const INITIAL_COURSES = [
+  {id:'c1',title:'Lean Six Sigma Yellow Belt',cat:'Lean Six Sigma',desc:'Aprende las técnicas de mejora de procesos de la metodología Lean Six Sigma.',dur:40,emoji:'📊',materials:[],quizzes:[],assignments:[]},
+  {id:'c2',title:'Lean Six Sigma Green Belt',cat:'Lean Six Sigma',desc:'Profundiza en la metodología Six Sigma para una gestión de calidad avanzada.',dur:40,emoji:'📈',materials:[],quizzes:[],assignments:[]},
+  {id:'c3',title:'Gestión de Proyectos y Metodologías Ágiles',cat:'Metodologías Ágiles',desc:'Aprende Scrum, Kanban y Lean para agilizar la gestión de proyectos.',dur:40,emoji:'🚀',materials:[],quizzes:[],assignments:[]},
+  {id:'c4',title:'Design Thinking',cat:'Innovación',desc:'Desarrolla tu creatividad e innovación aplicando la metodología Design Thinking.',dur:40,emoji:'💡',materials:[],quizzes:[],assignments:[]},
+  {id:'c5',title:'Metodología PRINCE2',cat:'Gestión de Proyectos',desc:'Adquiere conocimientos para gestionar proyectos de forma eficiente.',dur:40,emoji:'📋',materials:[],quizzes:[],assignments:[]},
+  {id:'c6',title:'Manejo Ágil de Riesgos',cat:'Metodologías Ágiles',desc:'Estrategias dinámicas para gestionar riesgos en proyectos ágiles.',dur:40,emoji:'⚡',materials:[],quizzes:[],assignments:[]}
+];
+
+function cloneData(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+function cleanDoc(value) {
+  if (Array.isArray(value)) return value.map(cleanDoc);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value)
+      .filter(([,v])=>v!==undefined)
+      .map(([k,v])=>[k,cleanDoc(v)]));
+  }
+  return value;
+}
+function docsFromSnapshot(snap) {
+  return snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+}
+function rememberPersisted(key, items) {
+  _persistedDocs[key] = new Map((items||[]).map(item=>[item.id,JSON.stringify(item)]));
+}
+function enrollmentId(cid, sid) { return `${cid}_${sid}`; }
+function viewId(v) { return v.id || `${v.sid}_${v.cid}_${v.mid}`; }
+function profileFromUser(u) {
+  return cleanDoc({
+    id:u.id, name:u.name||'', username:u.username||'', role:u.role,
+    email:normalizeEmail(u.email), authProvider:u.authProvider||'firebase-auth',
+    disabled:!!u.disabled
+  });
+}
+async function commitOperations(operations) {
+  for (let i=0;i<operations.length;i+=400) {
+    const batch=_fbdb.batch();
+    operations.slice(i,i+400).forEach(op=>{
+      if (op.type==='delete') batch.delete(op.ref);
+      else batch.set(op.ref,cleanDoc(op.data));
+    });
+    await batch.commit();
+  }
+}
+async function persistCollection(key, collectionName, items, options={}) {
+  const previous=_persistedDocs[key]||new Map();
+  const next=new Map();
+  const operations=[];
+  (items||[]).forEach(raw=>{
+    const item=cloneData(raw);
+    item.id=(options.idFor?options.idFor(item):item.id);
+    const data=options.dataFor?options.dataFor(item):item;
+    const signature=JSON.stringify(data);
+    next.set(item.id,signature);
+    if (previous.get(item.id)!==signature) {
+      operations.push({type:'set',ref:_fbdb.collection(collectionName).doc(item.id),data});
+    }
+  });
+  if (options.allowDelete) {
+    previous.forEach((_,id)=>{
+      if (!next.has(id)) operations.push({type:'delete',ref:_fbdb.collection(collectionName).doc(id)});
+    });
+  }
+  await commitOperations(operations);
+  _persistedDocs[key]=next;
+}
+async function persistUsers(users) {
+  if (!me || me.role!=='admin') throw new Error('Solo el administrador puede modificar usuarios.');
+  const previous=_persistedDocs.users||new Map();
+  const next=new Map();
+  const operations=[];
+  (users||[]).forEach(raw=>{
+    const u=cloneData(raw);
+    next.set(u.id,JSON.stringify(u));
+    if (previous.get(u.id)!==JSON.stringify(u)) {
+      operations.push({type:'set',ref:_fbdb.collection('userProfiles').doc(u.id),data:profileFromUser(u)});
+      const codeRef=_fbdb.collection('studentCodes').doc(u.id);
+      if (u.role==='student' && u.accessCode) {
+        operations.push({type:'set',ref:codeRef,data:{uid:u.id,code:u.accessCode,authEmail:u.authEmail||'',updatedAt:new Date().toISOString()}});
+      } else {
+        operations.push({type:'delete',ref:codeRef});
+      }
+    }
+  });
+  previous.forEach((_,id)=>{
+    if (!next.has(id)) {
+      operations.push({type:'delete',ref:_fbdb.collection('userProfiles').doc(id)});
+      operations.push({type:'delete',ref:_fbdb.collection('studentCodes').doc(id)});
+    }
+  });
+  await commitOperations(operations);
+  _persistedDocs.users=next;
+}
+async function persistKey(key, value) {
+  if (!_fbdb || !_fbauth || !_fbauth.currentUser) throw new Error('No hay una sesión segura activa.');
+  if (key==='users') return persistUsers(value);
+  if (key==='courses') return persistCollection(key,'courses',value,{allowDelete:me.role==='admin'});
+  if (key==='enrolls') {
+    if (me.role!=='admin') throw new Error('Solo el administrador puede modificar matrículas.');
+    return persistCollection(key,'enrollments',value,{allowDelete:true,idFor:e=>enrollmentId(e.cid,e.sid),dataFor:e=>{
+      const u=(DB.get('users')||[]).find(user=>user.id===e.sid)||{};
+      return {id:enrollmentId(e.cid,e.sid),cid:e.cid,sid:e.sid,role:u.role||e.role||'student',name:u.name||e.name||'',email:u.email||e.email||'',username:u.username||e.username||''};
+    }});
+  }
+  if (key==='subs') return persistCollection(key,'submissions',value,{allowDelete:me.role!=='student'});
+  if (key==='views') return persistCollection(key,'views',value,{allowDelete:me.role!=='student',idFor:viewId});
+  if (key==='gradeConfig' || key==='init') {
+    if (me.role!=='admin') throw new Error('Solo el administrador puede modificar la configuración.');
+    const data=key==='init'?{value:!!value}:{value:cleanDoc(value)};
+    await _fbdb.collection('settings').doc(key).set(data);
+    return;
+  }
+}
 
 const DB = {
   get: k => (_cache[k] !== undefined ? _cache[k] : null),
   set: (k, v) => {
     _cache[k] = v;
-    if (_fbdb) {
-      _fbdb.collection('lms').doc(k).set({ value: JSON.stringify(v) })
-        .catch(e => console.warn('Firebase sync error:', e));
-    } else {
-      try { localStorage.setItem('i506_'+k, JSON.stringify(v)); } catch(e) { console.warn('localStorage sync error:', e); }
-    }
-  }
+    const payload=cloneData(v);
+    const task=_persistQueue.then(()=>persistKey(k,payload));
+    _persistQueue=task.catch(e=>{
+      console.error('No se pudo guardar de forma segura:',e);
+      toast('No se pudo guardar el cambio. Recarga la página y vuelve a intentarlo.','err');
+    });
+    return task;
+  },
+  flush: () => _persistQueue
 };
 
-function initDB() {
-  if (DB.get('init')) return;
-  DB.set('users',[
-    {id:'u1',name:'Jason Chaves Bastos',username:'jason.chaves',role:'admin',email:'innova506@hotmail.com',accessCode:'',authProvider:'firebase-auth'}
-  ]);
-  DB.set('courses',[
-    {id:'c1',title:'Lean Six Sigma Yellow Belt',cat:'Lean Six Sigma',desc:'Aprende las técnicas de mejora de procesos de la metodología Lean Six Sigma.',dur:40,emoji:'📊',materials:[],quizzes:[],assignments:[]},
-    {id:'c2',title:'Lean Six Sigma Green Belt',cat:'Lean Six Sigma',desc:'Profundiza en la metodología Six Sigma para una gestión de calidad avanzada.',dur:40,emoji:'📈',materials:[],quizzes:[],assignments:[]},
-    {id:'c3',title:'Gestión de Proyectos y Metodologías Ágiles',cat:'Metodologías Ágiles',desc:'Aprende Scrum, Kanban y Lean para agilizar la gestión de proyectos.',dur:40,emoji:'🚀',materials:[],quizzes:[],assignments:[]},
-    {id:'c4',title:'Design Thinking',cat:'Innovación',desc:'Desarrolla tu creatividad e innovación aplicando la metodología Design Thinking.',dur:40,emoji:'💡',materials:[],quizzes:[],assignments:[]},
-    {id:'c5',title:'Metodología PRINCE2',cat:'Gestión de Proyectos',desc:'Adquiere conocimientos para gestionar proyectos de forma eficiente.',dur:40,emoji:'📋',materials:[],quizzes:[],assignments:[]},
-    {id:'c6',title:'Manejo Ágil de Riesgos',cat:'Metodologías Ágiles',desc:'Estrategias dinámicas para gestionar riesgos en proyectos ágiles.',dur:40,emoji:'⚡',materials:[],quizzes:[],assignments:[]},
-  ]);
-  DB.set('subs',[]);
-  DB.set('enrolls',[]);
-  DB.set('views',[]);
-  DB.set('init',true);
+async function ensureAdminFoundation(authUser) {
+  const profileRef=_fbdb.collection('userProfiles').doc(authUser.uid);
+  let profileSnap=await profileRef.get();
+  if (!profileSnap.exists) {
+    if (normalizeEmail(authUser.email)!==ADMIN_EMAIL) return null;
+    const admin={id:authUser.uid,name:'Jason Chaves Bastos',username:'jason.chaves',role:'admin',email:ADMIN_EMAIL,authProvider:'firebase-auth',disabled:false};
+    await profileRef.set(admin);
+    profileSnap=await profileRef.get();
+  }
+  const profile={id:profileSnap.id,...profileSnap.data()};
+  if (profile.role==='admin') {
+    const [initSnap,courseSnap]=await Promise.all([
+      _fbdb.collection('settings').doc('init').get(),
+      _fbdb.collection('courses').limit(1).get()
+    ]);
+    if (!initSnap.exists) {
+      const ops=[];
+      if (courseSnap.empty) INITIAL_COURSES.forEach(c=>ops.push({type:'set',ref:_fbdb.collection('courses').doc(c.id),data:c}));
+      ops.push({type:'set',ref:_fbdb.collection('settings').doc('init'),data:{value:true,version:4,createdAt:new Date().toISOString()}});
+      ops.push({type:'set',ref:_fbdb.collection('settings').doc('gradeConfig'),data:{value:{passThreshold:70,quizWeight:50,assignWeight:50,dropLowest:0,calcMethod:'weighted',displayType:'percent'}}});
+      await commitOperations(ops);
+    }
+  }
+  return profile;
 }
 
 async function startApp() {
   try {
     firebase.initializeApp(_firebaseConfig);
-    if (firebase.auth) {
-      _fbauth = firebase.auth();
-      _fbauth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(e => console.warn('Auth persistence warning:', e));
-    }
+    _fbauth = firebase.auth();
+    await _fbauth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
     _fbdb = firebase.firestore();
-    const snap = await _fbdb.collection('lms').get();
-    snap.forEach(doc => {
-      try { _cache[doc.id] = JSON.parse(doc.data().value); } catch(e) {}
-    });
   } catch(e) {
-    console.warn('Firebase no disponible, usando localStorage como respaldo:', e);
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith('i506_')) {
-        try { _cache[k.replace('i506_', '')] = JSON.parse(localStorage.getItem(k)); } catch(ex) {}
-      }
-    }
+    console.error('Firebase no disponible:',e);
+    showErr('No fue posible establecer una conexión segura con el campus. Intenta nuevamente.');
   }
   const loading = document.getElementById('app-loading');
   if (loading) loading.style.display = 'none';
-  initDB();
 }
 
 // ─── Auth ─────────────────────────────────────────────────────
@@ -1281,48 +1396,109 @@ function randomCodePart(len) {
 function makeAccessCode() { return `INNOVA-${randomCodePart(4)}-${randomCodePart(4)}-${randomCodePart(4)}`; }
 function isStrongAccessCode(code) { return /^INNOVA-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(String(code||'')); }
 function regenerateAccessCode(fieldId) { document.getElementById(fieldId).value = makeAccessCode(); }
+async function accessCodeEmail(code) {
+  const bytes=new TextEncoder().encode(normalizeAccessCode(code));
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const hex=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  return `alumno-${hex.slice(0,40)}@campus.innova506.org`;
+}
 function makeUsername(name, users, currentId) {
   const base = String(name||'usuario').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'.').replace(/^\.|\.$/g,'') || 'usuario';
   let candidate = base, n = 2;
   while ((users||[]).some(u => u.id!==currentId && u.username===candidate)) candidate = `${base}${n++}`;
   return candidate;
 }
-async function ensureAnonymousSession() {
-  if (!_fbauth) return null;
-  if (_fbauth.currentUser) return _fbauth.currentUser;
-  try { return (await _fbauth.signInAnonymously()).user; }
-  catch(e) { console.warn('Anonymous auth no disponible; el código funcionará solo con reglas abiertas/compatibilidad:', e); return null; }
+function uniqueById(items) {
+  return [...new Map((items||[]).map(x=>[x.id,x])).values()];
 }
-function staffProfileForAuth(authUser, email) {
-  const users = DB.get('users')||[];
-  let user = users.find(x => normalizeEmail(x.email)===email && (x.role==='admin'||x.role==='teacher'));
-  if (!user && email===ADMIN_EMAIL) {
-    user = {id:'u1',name:'Jason Chaves Bastos',username:'jason.chaves',role:'admin',email:ADMIN_EMAIL,accessCode:'',authProvider:'firebase-auth'};
-    users.push(user);
-  }
-  if (user && authUser) {
-    user.authUid = authUser.uid;
-    user.email = authUser.email || email;
-    user.authProvider = 'firebase-auth';
-    delete user.password;
-    DB.set('users', users);
-  }
-  return user;
+async function getManyByField(collection,field,value) {
+  return docsFromSnapshot(await _fbdb.collection(collection).where(field,'==',value).get());
 }
-function applySecurityMigration() {
-  const users = DB.get('users')||[];
-  let changed=false;
-  users.forEach(u => {
-    if ('password' in u) { delete u.password; changed=true; }
-    if (u.role==='student') {
-      if (!isStrongAccessCode(u.accessCode)) { u.accessCode = makeAccessCode(); changed=true; }
-      if (u.authProvider!=='access-code') { u.authProvider='access-code'; changed=true; }
-    } else if (u.role==='admin' || u.role==='teacher') {
-      if (u.accessCode) { u.accessCode=''; changed=true; }
-      if (u.authProvider!=='firebase-auth') { u.authProvider='firebase-auth'; changed=true; }
-    }
-  });
-  if (changed) { DB.set('users',users); toast('Migración de seguridad aplicada: contraseñas locales eliminadas y códigos reforzados.'); }
+async function getCourseDocs(cids) {
+  const snaps=await Promise.all(cids.map(cid=>_fbdb.collection('courses').doc(cid).get()));
+  return snaps.filter(s=>s.exists).map(s=>({id:s.id,...s.data()}));
+}
+async function loadDataForUser(profile) {
+  let users=[profile],courses=[],enrolls=[],subs=[],views=[];
+  const settingsPromise=Promise.all([
+    _fbdb.collection('settings').doc('gradeConfig').get(),
+    _fbdb.collection('settings').doc('init').get()
+  ]);
+  if (profile.role==='admin') {
+    const [uSnap,cSnap,eSnap,sSnap,vSnap,codeSnap]=await Promise.all([
+      _fbdb.collection('userProfiles').get(),_fbdb.collection('courses').get(),
+      _fbdb.collection('enrollments').get(),_fbdb.collection('submissions').get(),
+      _fbdb.collection('views').get(),_fbdb.collection('studentCodes').get()
+    ]);
+    const codes=new Map(docsFromSnapshot(codeSnap).map(x=>[x.id,x]));
+    users=docsFromSnapshot(uSnap).map(u=>({...u,accessCode:codes.get(u.id)?.code||'',authEmail:codes.get(u.id)?.authEmail||''}));
+    courses=docsFromSnapshot(cSnap); enrolls=docsFromSnapshot(eSnap);
+    subs=docsFromSnapshot(sSnap); views=docsFromSnapshot(vSnap);
+  } else if (profile.role==='teacher') {
+    const ownEnrolls=await getManyByField('enrollments','sid',profile.id);
+    const cids=[...new Set(ownEnrolls.map(e=>e.cid))];
+    courses=await getCourseDocs(cids);
+    const [courseEnrolls,courseSubs,courseViews]=await Promise.all([
+      Promise.all(cids.map(cid=>getManyByField('enrollments','cid',cid))),
+      Promise.all(cids.map(cid=>getManyByField('submissions','cid',cid))),
+      Promise.all(cids.map(cid=>getManyByField('views','cid',cid)))
+    ]);
+    enrolls=uniqueById([...ownEnrolls,...courseEnrolls.flat()]);
+    users=uniqueById([profile,...enrolls.map(e=>({id:e.sid,name:e.name||'',username:e.username||'',role:e.role,email:e.email||'',authProvider:e.role==='student'?'firebase-code':'firebase-auth'}))]);
+    subs=uniqueById(courseSubs.flat()); views=uniqueById(courseViews.flat());
+  } else {
+    enrolls=await getManyByField('enrollments','sid',profile.id);
+    courses=await getCourseDocs([...new Set(enrolls.map(e=>e.cid))]);
+    [subs,views]=await Promise.all([
+      getManyByField('submissions','sid',profile.id),
+      getManyByField('views','sid',profile.id)
+    ]);
+  }
+  const [gradeSnap,initSnap]=await settingsPromise;
+  _cache.users=users; _cache.courses=courses; _cache.enrolls=enrolls;
+  _cache.subs=subs; _cache.views=views;
+  _cache.gradeConfig=gradeSnap.exists?(gradeSnap.data().value||gradeSnap.data()):null;
+  _cache.init=initSnap.exists?!!initSnap.data().value:false;
+  ['users','courses','enrolls','subs','views'].forEach(k=>rememberPersisted(k,_cache[k]));
+}
+async function prepareAuthenticatedSession(authUser) {
+  const profile=await ensureAdminFoundation(authUser);
+  if (!profile) throw new Error('La cuenta no tiene un perfil autorizado en el campus.');
+  if (profile.disabled) throw new Error('Esta cuenta está desactivada.');
+  await loadDataForUser(profile);
+  onLogin((DB.get('users')||[]).find(u=>u.id===profile.id)||profile);
+}
+function provisioningAuth() {
+  let app=firebase.apps.find(a=>a.name==='provisioning');
+  if (!app) app=firebase.initializeApp(_firebaseConfig,'provisioning');
+  const auth=app.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(()=>{});
+  return auth;
+}
+async function provisionAuthAccount(email,password) {
+  const auth=provisioningAuth();
+  try {
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
+    const uid=cred.user.uid;
+    await auth.signOut();
+    return uid;
+  } catch(e) {
+    await auth.signOut().catch(()=>{});
+    throw e;
+  }
+}
+async function rotateStudentCode(oldCode,newCode) {
+  if (oldCode===newCode) return;
+  const auth=provisioningAuth();
+  try {
+    const cred=await auth.signInWithEmailAndPassword(await accessCodeEmail(oldCode),oldCode);
+    await cred.user.updateEmail(await accessCodeEmail(newCode));
+    await cred.user.updatePassword(newCode);
+    await auth.signOut();
+  } catch(e) {
+    await auth.signOut().catch(()=>{});
+    throw e;
+  }
 }
 
 function setLoginMode(m) {
@@ -1339,21 +1515,26 @@ async function login() {
   if (!_fbauth) { showErr('Firebase Auth no está disponible. Revisa la configuración del proyecto.'); return; }
   try {
     const cred = await _fbauth.signInWithEmailAndPassword(email,p);
-    const user = staffProfileForAuth(cred.user,email);
-    if (!user) { await _fbauth.signOut(); showErr('Este correo no está registrado como admin o docente.'); return; }
-    onLogin(user);
+    await prepareAuthenticatedSession(cred.user);
   } catch(e) {
     console.warn('Login Firebase Auth error:', e);
-    showErr('No se pudo ingresar. Verifica correo, contraseña y que la cuenta exista en Firebase Auth.');
+    if (_fbauth.currentUser) await _fbauth.signOut().catch(()=>{});
+    showErr(e.message==='La cuenta no tiene un perfil autorizado en el campus.'?e.message:'No se pudo ingresar. Verifica correo y contraseña.');
   }
 }
 
 async function loginCode() {
-  const codeNorm = normalizeAccessCode(document.getElementById('l-code').value);
-  if (!codeNorm) { showErr('Ingresa tu código de acceso.'); return; }
-  await ensureAnonymousSession();
-  const user = (DB.get('users')||[]).find(x=>x.role==='student' && normalizeAccessCode(x.accessCode)===codeNorm && !x.disabled);
-  user ? onLogin(user) : showErr('Código incorrecto, vencido o no asignado.');
+  const code=document.getElementById('l-code').value.trim().toUpperCase();
+  if (!isStrongAccessCode(code)) { showErr('Ingresa el código completo con formato INNOVA-XXXX-XXXX-XXXX.'); return; }
+  if (!_fbauth) { showErr('Firebase Auth no está disponible.'); return; }
+  try {
+    const cred=await _fbauth.signInWithEmailAndPassword(await accessCodeEmail(code),code);
+    await prepareAuthenticatedSession(cred.user);
+    if (me.role!=='student') throw new Error('El código no pertenece a un estudiante.');
+  } catch(e) {
+    if (_fbauth.currentUser) await _fbauth.signOut().catch(()=>{});
+    showErr('Código incorrecto, vencido o no asignado.');
+  }
 }
 
 function showErr(msg) {
@@ -1369,15 +1550,17 @@ function onLogin(user) {
   document.getElementById('app-main').classList.add('active');
   document.getElementById('sb-name').textContent = user.name;
   buildNav(user.role);
-  if (user.role==='admin') { applySecurityMigration(); showView('v-adash'); renderAdminDash(); }
+  if (user.role==='admin') { showView('v-adash'); renderAdminDash(); }
   else if (user.role==='teacher') { showView('v-tcourses'); renderTeacherCourses(); }
   else { showView('v-sdash'); renderStudentDash(); }
 }
 
-function logout() {
+async function logout() {
   clearQuizTimer();
-  if (_fbauth && _fbauth.currentUser) _fbauth.signOut().catch(e=>console.warn('Auth signOut error:', e));
+  if (_fbauth && _fbauth.currentUser) await _fbauth.signOut().catch(e=>console.warn('Auth signOut error:', e));
   me = null;
+  Object.keys(_cache).forEach(k=>delete _cache[k]);
+  Object.keys(_persistedDocs).forEach(k=>delete _persistedDocs[k]);
   document.getElementById('app-main').classList.remove('active');
   document.getElementById('app-login').style.display='flex';
   document.getElementById('l-user').value='';
@@ -2222,25 +2405,44 @@ function openStudentModal(role) {
   const isStudent=_newUserRole==='student';
   document.getElementById('sf-code').value=isStudent?makeAccessCode():'';
   document.getElementById('sf-code-wrap').style.display=isStudent?'block':'none';
-  document.getElementById('sf-auth-note').textContent=isStudent?'El estudiante ingresa con código. No se guardan contraseñas en el campus.':'El docente ingresa con Firebase Auth usando su correo. Crea esa cuenta en Firebase Authentication.';
+  document.getElementById('sf-pass-wrap').style.display=isStudent?'none':'block';
+  document.getElementById('sf-auth-note').innerHTML=isStudent
+    ?'<i class="fa fa-shield-alt"></i> El código crea una cuenta individual en Firebase. No queda expuesto en el perfil público del estudiante.'
+    :'<i class="fa fa-shield-alt"></i> La cuenta del docente se creará ahora en Firebase Authentication. La contraseña temporal no se guarda en Firestore.';
   document.querySelector('#m-student .mhd-title').textContent=_newUserRole==='teacher'?'Agregar Docente':'Agregar Estudiante';
   openModal('m-student');
 }
-function saveStudent() {
+async function saveStudent() {
   const name=document.getElementById('sf-name').value.trim();
   const email=normalizeEmail(document.getElementById('sf-email').value);
+  const tempPassword=document.getElementById('sf-pass').value;
   const users=DB.get('users')||[];
   const username=(document.getElementById('sf-user').value.trim()||makeUsername(name,users));
   if (!name) { toast('Nombre es requerido','err'); return; }
   if (_newUserRole==='teacher' && !email) { toast('El correo del docente es requerido para Firebase Auth','err'); return; }
+  if (_newUserRole==='teacher' && tempPassword.length<10) { toast('La contraseña temporal debe tener al menos 10 caracteres','err'); return; }
   if (username && users.some(u=>u.username===username)) { toast('Ese usuario ya existe','err'); return; }
-  const data={id:'u'+Date.now(),name,username,role:_newUserRole,email,accessCode:'',authProvider:_newUserRole==='teacher'?'firebase-auth':'access-code'};
-  if (_newUserRole==='student') {
-    data.accessCode=document.getElementById('sf-code').value.trim()||makeAccessCode();
-    if (!isStrongAccessCode(data.accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
+  if (email && users.some(u=>normalizeEmail(u.email)===email)) { toast('Ese correo ya está registrado','err'); return; }
+  try {
+    let authEmail=email, password=tempPassword, accessCode='';
+    if (_newUserRole==='student') {
+      accessCode=(document.getElementById('sf-code').value.trim()||makeAccessCode()).toUpperCase();
+      if (!isStrongAccessCode(accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
+      authEmail=await accessCodeEmail(accessCode);
+      password=accessCode;
+    }
+    const uid=await provisionAuthAccount(authEmail,password);
+    const data={id:uid,name,username,role:_newUserRole,email,accessCode,authEmail:_newUserRole==='student'?authEmail:'',authProvider:_newUserRole==='teacher'?'firebase-auth':'firebase-code',disabled:false};
+    users.push(data);
+    await DB.set('users',users);
+    closeModal('m-student'); renderStudentsTb();
+    toast(_newUserRole==='teacher'?'Docente creado con acceso individual':'Estudiante creado con acceso individual');
+  } catch(e) {
+    console.error('Error al crear el usuario:',e);
+    const msg=e.code==='auth/email-already-in-use'?'La cuenta ya existe en Firebase Authentication.':
+      e.code==='auth/weak-password'?'La contraseña no cumple los requisitos de Firebase.':'No se pudo crear la cuenta segura. Intenta nuevamente.';
+    toast(msg,'err');
   }
-  users.push(data);
-  DB.set('users',users); closeModal('m-student'); renderStudentsTb(); toast(_newUserRole==='teacher'?'Docente registrado. Crea su cuenta en Firebase Auth.':'Estudiante registrado con código seguro');
 }
 function filterStudents(q) {
   const qLow=q.toLowerCase();
@@ -2248,11 +2450,15 @@ function filterStudents(q) {
     r.style.display=r.textContent.toLowerCase().includes(qLow)?'':'none';
   });
 }
-function delStudent(id) {
+async function delStudent(id) {
   if (!confirm('¿Eliminar este estudiante?')) return;
-  DB.set('users',(DB.get('users')||[]).filter(u=>u.id!==id));
-  DB.set('enrolls',(DB.get('enrolls')||[]).filter(e=>e.sid!==id));
-  renderStudentsTb(); toast('Estudiante eliminado');
+  try {
+    DB.set('users',(DB.get('users')||[]).filter(u=>u.id!==id));
+    DB.set('enrolls',(DB.get('enrolls')||[]).filter(e=>e.sid!==id));
+    DB.set('subs',(DB.get('subs')||[]).filter(s=>s.sid!==id));
+    await DB.set('views',(DB.get('views')||[]).filter(v=>v.sid!==id));
+    renderStudentsTb(); toast('Acceso revocado y datos académicos eliminados');
+  } catch(e) { console.error(e); }
 }
 
 let editStudentId = null;
@@ -2263,28 +2469,38 @@ function openEditStudent(id) {
   const isStudent=u.role==='student';
   document.getElementById('edf-name').value = u.name||'';
   document.getElementById('edf-email').value = u.email||'';
+  document.getElementById('edf-email').disabled = !isStudent;
   document.getElementById('edf-user').value = u.username||'';
   document.getElementById('edf-pass').value = '';
   document.getElementById('edf-code').value = u.accessCode||'';
   document.getElementById('edf-code-wrap').style.display=isStudent?'block':'none';
-  document.getElementById('edf-auth-note').textContent=isStudent?'El estudiante ingresa con código. Puedes regenerarlo si se comparte por error.':'Admin/docente ingresa con Firebase Auth. La contraseña se gestiona fuera del campus.';
+  document.getElementById('edf-auth-note').textContent=isStudent?'El estudiante ingresa con código. Al regenerarlo, el anterior deja de funcionar.':'El correo y la contraseña del docente se administran en Firebase Authentication.';
   openModal('m-edit-student');
 }
-function saveEditStudent() {
+async function saveEditStudent() {
   const name=document.getElementById('edf-name').value.trim();
-  const email=normalizeEmail(document.getElementById('edf-email').value);
   const users=DB.get('users')||[];
   const idx=users.findIndex(u=>u.id===editStudentId);
   if (idx<0) return;
+  const isStudent=users[idx].role==='student';
+  const email=isStudent?normalizeEmail(document.getElementById('edf-email').value):normalizeEmail(users[idx].email);
   const username=(document.getElementById('edf-user').value.trim()||makeUsername(name,users,editStudentId));
   if (!name) { toast('Nombre es requerido','err'); return; }
-  if ((users[idx].role==='admin'||users[idx].role==='teacher') && !email) { toast('El correo es requerido para Firebase Auth','err'); return; }
+  if (!isStudent && !email) { toast('El correo es requerido para Firebase Auth','err'); return; }
   if (users.some((u,i)=>u.username===username&&i!==idx)) { toast('Ese usuario ya existe','err'); return; }
-  const accessCode=users[idx].role==='student'?(document.getElementById('edf-code').value.trim()||makeAccessCode()):'';
-    if (users[idx].role==='student' && !isStrongAccessCode(accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
-  users[idx]={...users[idx],name,username,email,accessCode,authProvider:users[idx].role==='student'?'access-code':'firebase-auth'};
-  delete users[idx].password;
-  DB.set('users',users); closeModal('m-edit-student'); renderStudentsTb(); toast('Usuario actualizado');
+  const accessCode=isStudent?(document.getElementById('edf-code').value.trim()||makeAccessCode()).toUpperCase():'';
+  if (isStudent && !isStrongAccessCode(accessCode)) { toast('Genera un código seguro con el formato INNOVA-XXXX-XXXX-XXXX','err'); return; }
+  try {
+    if (isStudent) await rotateStudentCode(users[idx].accessCode,accessCode);
+    users[idx]={...users[idx],name,username,email,accessCode,authEmail:isStudent?await accessCodeEmail(accessCode):'',authProvider:isStudent?'firebase-code':'firebase-auth'};
+    delete users[idx].password;
+    await DB.set('users',users);
+    await DB.set('enrolls',DB.get('enrolls')||[]);
+    closeModal('m-edit-student'); renderStudentsTb(); toast('Usuario actualizado');
+  } catch(e) {
+    console.error('Error al actualizar el acceso:',e);
+    toast('No se pudo actualizar el código de acceso. Intenta nuevamente.','err');
+  }
 }
 
 // ─── Admin Grades ─────────────────────────────────────────────
@@ -3590,7 +3806,7 @@ function renderGradeBook() {
       <option value="all">Todos los cursos</option>
       ${courses.map(c=>`<option value="${c.id}" ${gbSelectedCourse===c.id?'selected':''}>${c.emoji||'📚'} ${c.title}</option>`).join('')}
     </select>
-    <button type="button" class="btn btn-success" onclick="exportGradebookCSV()"><i class="fa fa-file-excel"></i> Exportar CSV</button>`;
+    <button class="btn btn-success" onclick="exportGradebookCSV()"><i class="fa fa-file-excel"></i> Exportar CSV</button>`;
 
   const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
   if (!filteredCourses.length) {
@@ -3722,17 +3938,19 @@ function renderGradeBook() {
           <span style="font-size:20px">${c.emoji||'📚'}</span>
           <div>
             <div style="font-size:16px;font-weight:700">${c.title}</div>
-            <div style="font-size:12px;color:var(--muted)">${enrolled.length} estudiante${enrolled.length!==1?'s':''} · Aprobación: ${cfg.passThreshold}% · ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Promedio global':'Nota más alta'}</div>
+            <div style="font-size:12px;color:var(--muted)">${enrolled.length} estudiante${enrolled.length!==1?'s':''} · Aprobación: ${cfg.passThreshold}% · ${cfg.aggregation==='weighted_mean'?`Cuestionarios ${cfg.quizWeight}% / Tareas ${cfg.assignWeight}%`:cfg.aggregation==='mean'?'Media simple':cfg.aggregation==='sum'?'Suma':'Nota más alta'}</div>
           </div>
         </div>
-        <div class="gb-wrap" style="border:0;border-radius:0;box-shadow:none">
+        <div class="gb-wrap">
           <table class="gb-table">
             <thead>${groupRow}</thead>
             <tbody>
               ${rows}
               <tr class="gb-avg-row">
                 <td class="gb-student">📊 Promedio clase</td>
-                ${avgQuizCells}${avgQuizCatCell}${avgAssignCells}${avgAssignCatCell}${avgFinalCell}
+                ${avgQuizCells}${avgQuizCatCell}
+                ${avgAssignCells}${avgAssignCatCell}
+                ${avgFinalCell}
               </tr>
             </tbody>
           </table>
@@ -3740,12 +3958,127 @@ function renderGradeBook() {
       </div>`;
   });
 
-  document.getElementById('gb-body').innerHTML = html ||
-    '<div class="empty"><i class="fa fa-user-graduate"></i><p>No hay estudiantes inscritos en los cursos seleccionados.</p></div>';
+  if (!html) html = '<div class="empty"><i class="fa fa-table"></i><p>No hay datos de calificaciones aún</p></div>';
+  document.getElementById('gb-body').innerHTML = html;
 }
 
-function csvSafe(value) {
-  return `"${String(value ?? '').replace(/"/g,'""')}"`;
+// ─── Grade Config ─────────────────────────────────────────────
+function renderGradeConfig() {
+  document.getElementById('gb-actions').innerHTML = '';
+  const cfg = getGradeConfig();
+  const aggLabels = {
+    weighted_mean:'Media ponderada (recomendado)',
+    mean:'Media simple',
+    sum:'Suma de notas',
+    highest:'Nota más alta'
+  };
+
+  document.getElementById('gb-body').innerHTML = `
+    <!-- Método de agregación -->
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="fa fa-calculator" style="color:var(--primary)"></i> Método de Cálculo</div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Método de agregación</label>
+          <select id="cfg-agg" onchange="cfgToggleWeights()">
+            ${Object.entries(aggLabels).map(([v,l])=>`<option value="${v}" ${cfg.aggregation===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">Define cómo se calcula la nota final del curso</small>
+        </div>
+        <div class="cfg-item">
+          <label>Umbral de aprobación (%)</label>
+          <input type="number" id="cfg-pass" value="${cfg.passThreshold}" min="1" max="100">
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">Porcentaje mínimo para aprobar (actualmente ${cfg.passThreshold}%)</small>
+        </div>
+        <div class="cfg-item">
+          <label>Descartar N notas más bajas de cuestionarios</label>
+          <input type="number" id="cfg-drop" value="${cfg.dropLowest}" min="0" max="10">
+          <small style="color:var(--muted);font-size:11px;margin-top:2px">0 = no descartar. Moodle: "Drop lowest"</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ponderación de categorías -->
+    <div class="cfg-section" id="cfg-weights-section" style="${cfg.aggregation!=='weighted_mean'?'opacity:.5;pointer-events:none':''}">
+      <div class="cfg-section-title"><i class="fa fa-balance-scale" style="color:var(--info)"></i> Ponderación de Categorías <small style="font-weight:400;color:var(--muted)">(solo para Media Ponderada)</small></div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Peso de Cuestionarios (%)</label>
+          <input type="number" id="cfg-qw" value="${cfg.quizWeight}" min="0" max="100" oninput="syncWeights('q')">
+        </div>
+        <div class="cfg-item">
+          <label>Peso de Tareas (%)</label>
+          <input type="number" id="cfg-aw" value="${cfg.assignWeight}" min="0" max="100" oninput="syncWeights('a')">
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:#d0e8f5;border-radius:8px;font-size:13px;color:#155169">
+        <i class="fa fa-info-circle"></i> Los pesos deben sumar 100%. Ej: Cuestionarios 60% + Tareas 40% = 100%
+        <span id="cfg-weight-warn" style="color:#e74c3c;font-weight:700;margin-left:8px;display:none">⚠️ No suman 100%</span>
+      </div>
+    </div>
+
+    <!-- Tipo de visualización -->
+    <div class="cfg-section">
+      <div class="cfg-section-title"><i class="fa fa-eye" style="color:var(--success)"></i> Tipo de Visualización de Notas</div>
+      <div class="cfg-grid">
+        <div class="cfg-item">
+          <label>Mostrar nota como</label>
+          <select id="cfg-display">
+            <option value="percentage" ${cfg.displayType==='percentage'?'selected':''}>Solo porcentaje (ej: 85%)</option>
+            <option value="points" ${cfg.displayType==='points'?'selected':''}>Solo puntos (ej: 17/20)</option>
+            <option value="both" ${cfg.displayType==='both'?'selected':''}>Porcentaje + puntos (ej: 85% (17/20))</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn btn-primary" onclick="saveGradeConfig()" style="padding:12px 28px">
+        <i class="fa fa-save"></i> Guardar Configuración
+      </button>
+      <button class="btn btn-outline" onclick="resetGradeConfig()">
+        <i class="fa fa-undo"></i> Restaurar valores predeterminados
+      </button>
+    </div>`;
+}
+
+function cfgToggleWeights() {
+  const agg = document.getElementById('cfg-agg').value;
+  const sec = document.getElementById('cfg-weights-section');
+  if (sec) sec.style.cssText = agg!=='weighted_mean' ? 'opacity:.5;pointer-events:none' : '';
+}
+
+function syncWeights(changed) {
+  const qEl = document.getElementById('cfg-qw'), aEl = document.getElementById('cfg-aw');
+  if (!qEl||!aEl) return;
+  const q = parseInt(qEl.value)||0, a = parseInt(aEl.value)||0;
+  const warn = document.getElementById('cfg-weight-warn');
+  if (warn) warn.style.display = (q+a)!==100 ? 'inline' : 'none';
+}
+
+function saveGradeConfig() {
+  const agg = document.getElementById('cfg-agg').value;
+  const pass = parseInt(document.getElementById('cfg-pass').value)||70;
+  const qw = parseInt(document.getElementById('cfg-qw').value)||60;
+  const aw = parseInt(document.getElementById('cfg-aw').value)||40;
+  const drop = parseInt(document.getElementById('cfg-drop').value)||0;
+  const display = document.getElementById('cfg-display').value;
+
+  if (agg==='weighted_mean' && qw+aw!==100) {
+    toast('Los pesos deben sumar exactamente 100%','err'); return;
+  }
+  if (pass<1||pass>100) { toast('El umbral debe estar entre 1 y 100','err'); return; }
+
+  DB.set('gradeConfig',{passThreshold:pass,aggregation:agg,quizWeight:qw,assignWeight:aw,displayType:display,dropLowest:drop});
+  toast('Configuración de calificaciones guardada');
+  renderGradeConfig();
+}
+
+function resetGradeConfig() {
+  if (!confirm('¿Restaurar la configuración predeterminada?')) return;
+  DB.set('gradeConfig', DEFAULT_GRADE_CONFIG);
+  renderGradeConfig();
+  toast('Configuración restaurada');
 }
 
 function exportGradebookCSV() {
@@ -3754,127 +4087,47 @@ function exportGradebookCSV() {
   const users = DB.get('users')||[];
   const enrolls = DB.get('enrolls')||[];
   const allSubs = DB.get('subs')||[];
-  const selected = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
-  const lines = [[
-    'Curso','Estudiante','Usuario','Promedio cuestionarios','Promedio tareas','Nota final','Estado'
-  ].map(csvSafe).join(',')];
+  const students = users.filter(u=>u.role==='student');
+  const filteredCourses = gbSelectedCourse==='all' ? courses : courses.filter(c=>c.id===gbSelectedCourse);
 
-  selected.forEach(c => {
-    const enrolled = enrolls.filter(e=>e.cid===c.id)
-      .map(e=>users.find(u=>u.id===e.sid)).filter(Boolean);
-    enrolled.forEach(st => {
-      const bestByQuiz = {};
-      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{
-        if (!bestByQuiz[s.qid] || s.score>bestByQuiz[s.qid].score) bestByQuiz[s.qid]=s;
+  let csv = '\uFEFF'; // BOM for Excel
+  filteredCourses.forEach(c=>{
+    const enrolled = enrolls.filter(e=>e.cid===c.id).map(e=>students.find(u=>u.id===e.sid)).filter(Boolean);
+    if (!enrolled.length) return;
+    csv += `\n"Curso: ${c.title}"\n`;
+    const qHeaders = (c.quizzes||[]).map(q=>`"${q.title}"`).join(',');
+    const aHeaders = (c.assignments||[]).map(a=>`"${a.title}"`).join(',');
+    csv += `"Estudiante",${qHeaders}${qHeaders?',':''}"Prom. Cuestionarios",${aHeaders}${aHeaders?',':''}"Prom. Tareas","Nota Final"\n`;
+    enrolled.forEach(st=>{
+      const qVals = (c.quizzes||[]).map(q=>{
+        const best = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.qid===q.id&&s.type==='quiz').reduce((b,s)=>(!b||s.score>b.score)?s:b,null);
+        return best ? Math.round((best.score/best.max)*100)+'%' : '—';
       });
-      let quizPcts = Object.values(bestByQuiz).map(s=>Math.round((s.score/s.max)*100));
-      if (cfg.dropLowest>0 && quizPcts.length>cfg.dropLowest) {
-        quizPcts=[...quizPcts].sort((a,b)=>a-b).slice(cfg.dropLowest);
-      }
-      const quizAvg = quizPcts.length ? Math.round(quizPcts.reduce((a,b)=>a+b,0)/quizPcts.length) : '';
-      const assignPcts = allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded).map(s=>Number(s.grade));
-      const assignAvg = assignPcts.length ? Math.round(assignPcts.reduce((a,b)=>a+b,0)/assignPcts.length) : '';
-      const final = calcStudentCourseGrade(st.id,c.id,allSubs,cfg);
-      const status = final===null ? 'Sin calificar' : final>=cfg.passThreshold ? 'Aprobado' : 'En proceso';
-      lines.push([c.title,st.name,st.username||'',quizAvg===''?'':quizAvg+'%',assignAvg===''?'':assignAvg+'%',final===null?'':final+'%',status].map(csvSafe).join(','));
+      const aVals = (c.assignments||[]).map(a=>{
+        const sub = allSubs.find(s=>s.sid===st.id&&s.cid===c.id&&s.aid===a.id&&s.type==='assignment'&&s.graded);
+        return sub ? sub.grade+'%' : '—';
+      });
+      const qByQid={};
+      allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='quiz').forEach(s=>{if(!qByQid[s.qid]||s.score>qByQid[s.qid].score)qByQid[s.qid]=s;});
+      const qPcts=Object.values(qByQid).map(s=>Math.round((s.score/s.max)*100));
+      const qAvg=qPcts.length?Math.round(qPcts.reduce((a,b)=>a+b,0)/qPcts.length)+'%':'—';
+      const aSubs=allSubs.filter(s=>s.sid===st.id&&s.cid===c.id&&s.type==='assignment'&&s.graded);
+      const aAvg=aSubs.length?Math.round(aSubs.reduce((a,s)=>a+Number(s.grade),0)/aSubs.length)+'%':'—';
+      const final=calcStudentCourseGrade(st.id,c.id,allSubs,cfg);
+      csv += `"${st.name}",${qVals.join(',')},${qAvg},${aVals.join(',')},${aAvg},${final!==null?final+'%':'—'}\n`;
     });
   });
 
-  if (lines.length===1) { toast('No hay calificaciones para exportar','err'); return; }
-  const blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=`Cuaderno_Calificaciones_INNOVA506_${todayStr()}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  toast('Cuaderno de calificaciones exportado');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='Cuaderno_Calificaciones_Campus_INNOVA_506.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV exportado exitosamente');
 }
 
-function renderGradeConfig() {
-  const cfg = getGradeConfig();
-  document.getElementById('gb-actions').innerHTML='';
-  document.getElementById('gb-body').innerHTML = `
-    <div class="cfg-section">
-      <div class="cfg-section-title"><i class="fa fa-sliders-h" style="color:var(--primary)"></i> Cálculo y visualización de notas</div>
-      <div class="cfg-grid">
-        <div class="cfg-item">
-          <label for="gcf-pass">Nota mínima de aprobación (%)</label>
-          <input type="number" id="gcf-pass" min="0" max="100" value="${cfg.passThreshold}">
-        </div>
-        <div class="cfg-item">
-          <label for="gcf-aggregation">Método de cálculo</label>
-          <select id="gcf-aggregation" onchange="toggleGradeWeightFields()">
-            <option value="weighted_mean" ${cfg.aggregation==='weighted_mean'?'selected':''}>Media ponderada</option>
-            <option value="mean" ${cfg.aggregation==='mean'?'selected':''}>Media simple por categorías</option>
-            <option value="sum" ${cfg.aggregation==='sum'?'selected':''}>Promedio de todas las actividades</option>
-            <option value="highest" ${cfg.aggregation==='highest'?'selected':''}>Nota más alta</option>
-          </select>
-        </div>
-        <div class="cfg-item grade-weight-field">
-          <label for="gcf-quiz">Peso de cuestionarios (%)</label>
-          <input type="number" id="gcf-quiz" min="0" max="100" value="${cfg.quizWeight}">
-        </div>
-        <div class="cfg-item grade-weight-field">
-          <label for="gcf-assign">Peso de tareas (%)</label>
-          <input type="number" id="gcf-assign" min="0" max="100" value="${cfg.assignWeight}">
-        </div>
-        <div class="cfg-item">
-          <label for="gcf-display">Presentación de la nota</label>
-          <select id="gcf-display">
-            <option value="percentage" ${cfg.displayType==='percentage'?'selected':''}>Porcentaje</option>
-            <option value="points" ${cfg.displayType==='points'?'selected':''}>Puntos</option>
-            <option value="both" ${cfg.displayType==='both'?'selected':''}>Porcentaje y puntos</option>
-          </select>
-        </div>
-        <div class="cfg-item">
-          <label for="gcf-drop">Cuestionarios más bajos a excluir</label>
-          <input type="number" id="gcf-drop" min="0" max="10" value="${cfg.dropLowest}">
-        </div>
-      </div>
-      <div class="form-note" style="margin-top:18px">La configuración se aplica al cálculo de la nota final en todos los cursos. Cuando utilice media ponderada, ambos pesos deben sumar 100%.</div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap">
-        <button type="button" class="btn btn-outline" onclick="resetGradeConfig()"><i class="fa fa-rotate-left"></i> Restaurar valores</button>
-        <button type="button" class="btn btn-primary" onclick="saveGradeConfig()"><i class="fa fa-save"></i> Guardar configuración</button>
-      </div>
-    </div>`;
-  toggleGradeWeightFields();
-}
-
-function toggleGradeWeightFields() {
-  const aggregation = document.getElementById('gcf-aggregation');
-  if (!aggregation) return;
-  document.querySelectorAll('.grade-weight-field').forEach(el=>{
-    el.style.opacity = aggregation.value==='weighted_mean' ? '1' : '.45';
-    const input=el.querySelector('input'); if (input) input.disabled=aggregation.value!=='weighted_mean';
-  });
-}
-
-function saveGradeConfig() {
-  const cfg = {
-    passThreshold:Number(document.getElementById('gcf-pass').value),
-    aggregation:document.getElementById('gcf-aggregation').value,
-    quizWeight:Number(document.getElementById('gcf-quiz').value),
-    assignWeight:Number(document.getElementById('gcf-assign').value),
-    displayType:document.getElementById('gcf-display').value,
-    dropLowest:Number(document.getElementById('gcf-drop').value)
-  };
-  if (!Number.isFinite(cfg.passThreshold) || cfg.passThreshold<0 || cfg.passThreshold>100) {
-    toast('La nota mínima debe estar entre 0 y 100','err'); return;
-  }
-  if (cfg.aggregation==='weighted_mean' && cfg.quizWeight+cfg.assignWeight!==100) {
-    toast('Los pesos de cuestionarios y tareas deben sumar 100%','err'); return;
-  }
-  if (cfg.dropLowest<0 || cfg.dropLowest>10) { toast('La cantidad a excluir debe estar entre 0 y 10','err'); return; }
-  DB.set('gradeConfig',cfg);
-  toast('Configuración de calificaciones guardada');
-  renderGradeConfig();
-}
-
-function resetGradeConfig() {
-  DB.set('gradeConfig',{...DEFAULT_GRADE_CONFIG});
-  toast('Configuración restaurada');
-  renderGradeConfig();
-}
-
+// ─── Init ─────────────────────────────────────────────────────
 startApp();
 </script>
 </body>
