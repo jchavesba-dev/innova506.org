@@ -1,9 +1,0 @@
-{
-  "name": "innova506-certificate-functions",
-  "private": true,
-  "version": "1.0.0",
-  "engines": {"node":"22"},
-  "main": "index.js",
-  "scripts": {"test":"node --test ../tests/*.test.cjs"},
-  "dependencies": {"firebase-admin":"^13.0.0","firebase-functions":"^6.0.0"}
-}
