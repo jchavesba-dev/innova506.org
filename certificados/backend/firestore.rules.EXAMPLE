@@ -1,0 +1,12 @@
+// SOLO ejemplo para un proyecto Firebase dedicado y nuevo.
+// NO reemplazar las reglas del proyecto campus-innova506: podría interrumpir el campus.
+// En un proyecto compartido hay que AUDITAR TODAS las reglas, especialmente wildcards.
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  match /innova506Certificates/{code} { allow read, write: if false; }
+  match /innova506CertificateAudit/{entry} { allow read, write: if false; }
+  match /{document=**} { allow read, write: if false; }
+ }
+}
+// Las Cloud Functions usan Admin SDK y un rol IAM; no se basan en reglas del cliente.
