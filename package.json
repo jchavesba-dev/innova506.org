@@ -1,12 +1,9 @@
 {
-  "name": "innova506-campus-security",
+  "name": "innova506-certificate-functions",
   "private": true,
-  "scripts": {
-    "test:rules": "firebase emulators:exec --only firestore \"node --test tests/firestore.rules.test.mjs\""
-  },
-  "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.0",
-    "firebase": "^12.0.0",
-    "firebase-tools": "^13.35.1"
-  }
+  "version": "1.0.0",
+  "engines": {"node":"22"},
+  "main": "index.js",
+  "scripts": {"test":"node --test ../tests/*.test.cjs"},
+  "dependencies": {"firebase-admin":"^13.0.0","firebase-functions":"^6.0.0"}
 }
